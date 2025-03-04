@@ -1,0 +1,112 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class TipCalculator extends JFrame {
+    private JTextField billInput;
+    private JLabel tipOutput;
+    private JLabel totalOutput;
+    private JLabel tipPercent;
+    private JSlider tipPercentSlider;
+
+    public TipCalculator() {
+        setTitle("Tip Calculator");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(6, 1, 10, 10));
+
+        JPanel billPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        billPanel.add(new JLabel("Bill"));
+        billInput = new JTextField(10);
+        billPanel.add(billInput);
+        add(billPanel);
+
+        JPanel tipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        tipPanel.add(new JLabel("Tip"));
+        tipOutput = new JLabel("0.00");
+        tipPanel.add(tipOutput);
+        add(tipPanel);
+
+        JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        totalPanel.add(new JLabel("Total"));
+        totalOutput = new JLabel("0.00");
+        totalPanel.add(totalOutput);
+        add(totalPanel);
+
+        JPanel tipPercentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        tipPercentPanel.add(new JLabel("Tip Percentage"));
+        tipPercent = new JLabel("15%");
+        tipPercentPanel.add(tipPercent);
+        add(tipPercentPanel);
+
+        tipPercentSlider = new JSlider(0, 100, 15);
+        tipPercentSlider.addChangeListener(e -> updateTip());
+        add(tipPercentSlider);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton normalTipButton = new JButton("15%");
+        normalTipButton.addActionListener(e -> setTipPercentage(15));
+        buttonPanel.add(normalTipButton);
+
+        JButton generousTipButton = new JButton("20%");
+        generousTipButton.addActionListener(e -> setTipPercentage(20));
+        buttonPanel.add(generousTipButton);
+        add(buttonPanel);
+
+        JPanel roundPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton roundDownButton = new JButton("Round Down");
+        roundDownButton.addActionListener(e -> roundDown());
+        roundPanel.add(roundDownButton);
+
+        JButton roundUpButton = new JButton("Round Up");
+        roundUpButton.addActionListener(e -> roundUp());
+        roundPanel.add(roundUpButton);
+        add(roundPanel);
+    }
+
+    private void updateTip() {
+        try {
+            double bill = Double.parseDouble(billInput.getText());
+            int tipPercentage = tipPercentSlider.getValue();
+            double tip = bill * tipPercentage / 100;
+            double total = bill + tip;
+            tipOutput.setText(String.format("%.2f", tip));
+            totalOutput.setText(String.format("%.2f", total));
+            tipPercent.setText(tipPercentage + "%");
+        } catch (NumberFormatException e) {
+            tipOutput.setText("0.00");
+            totalOutput.setText("0.00");
+        }
+    }
+
+    private void setTipPercentage(int percentage) {
+        tipPercentSlider.setValue(percentage);
+    }
+
+    private void roundDown() {
+        try {
+            double total = Double.parseDouble(totalOutput.getText());
+            totalOutput.setText(String.format("%.2f", Math.floor(total)));
+        } catch (NumberFormatException e) {
+            totalOutput.setText("0.00");
+        }
+    }
+
+    private void roundUp() {
+        try {
+            double total = Double.parseDouble(totalOutput.getText());
+            totalOutput.setText(String.format("%.2f", Math.ceil(total)));
+        } catch (NumberFormatException e) {
+            totalOutput.setText("0.00");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            TipCalculator calculator = new TipCalculator();
+            calculator.setVisible(true);
+        });
+    }
+}
