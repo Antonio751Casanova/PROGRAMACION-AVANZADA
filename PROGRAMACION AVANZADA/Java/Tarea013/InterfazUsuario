@@ -1,0 +1,17 @@
+
+import java.io.IOException;
+import java.util.List;
+
+public class InterfazUsuario {
+    public void mostrarMenu(List<String> opciones) {
+        // Implementar lógica para mostrar el menú
+    }
+
+    public String leerEntrada(String mensaje) throws IOException {
+		return mensaje;
+        // Implementar lógica para leer entrada del usuario
+    }
+
+    // Otros métodos para interactuar con el usuario
+}
+
