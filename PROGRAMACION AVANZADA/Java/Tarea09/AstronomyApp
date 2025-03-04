@@ -1,0 +1,221 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class AstronomyApp extends JFrame {
+    private JLabel lblIcon, lblName, lblMass, lblCircumference, lblAge;
+    private JLabel lblDate, lblMoonPhaseIcon, lblMoonPhaseText;
+    private JLabel lblPhaseIcon1, lblPhaseIcon2, lblPhaseIcon3, lblPhaseIcon4;
+    private JLabel lblPhaseText1, lblPhaseText2, lblPhaseText3, lblPhaseText4;
+    private JLabel lblSunrise, lblDaylight, lblSunset;
+    private JProgressBar activityWaiting;
+    private int counter = 0;
+    private JButton counterBtn;
+
+    public AstronomyApp() {
+        setTitle("Astronomy App");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new CardLayout());
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        tabbedPane.addTab("About", createAboutPanel());
+        tabbedPane.addTab("Astronomical Bodies", createAstronomicalBodiesPanel());
+        tabbedPane.addTab("Astronomical Data", createAstronomicalDataPanel());
+        tabbedPane.addTab("Moon Phase", createMoonPhasePanel());
+        tabbedPane.addTab("Sunrise", createSunrisePanel());
+
+        add(tabbedPane);
+        setVisible(true);
+    }
+
+    private JPanel createAboutPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        panel.add(createLabel("Version 1.0.0"));
+        panel.add(createLabel("Sunrise/Sunset data provided by: https://sunrise-sunset.org/api"));
+        panel.add(createLabel("Icons from Font Awesome"));
+
+        return panel;
+    }
+
+    private JPanel createAstronomicalBodiesPanel() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 8, 8));
+
+        panel.add(createButton("🌎"));
+        panel.add(createButton("🌕"));
+        panel.add(createButton("☀️"));
+        panel.add(createButton("☄"));
+
+        return panel;
+    }
+
+    private JPanel createAstronomicalDataPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        lblIcon = new JLabel();
+        lblIcon.setFont(new Font("Serif", Font.PLAIN, 96));
+        lblName = new JLabel();
+        lblName.setFont(new Font("Serif", Font.BOLD, 16));
+        lblMass = new JLabel();
+        lblCircumference = new JLabel();
+        lblAge = new JLabel();
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(lblIcon, gbc);
+
+        gbc.gridy = 1;
+        panel.add(lblName, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(createLabel("Mass:"), gbc);
+        gbc.gridy = 3;
+        panel.add(createLabel("Circumference:"), gbc);
+        gbc.gridy = 4;
+        panel.add(createLabel("Age:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(lblMass, gbc);
+        gbc.gridy = 3;
+        panel.add(lblCircumference, gbc);
+        gbc.gridy = 4;
+        panel.add(lblAge, gbc);
+
+        return panel;
+    }
+
+    private JPanel createMoonPhasePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        lblDate = createLabel("", Font.BOLD, 16);
+        lblMoonPhaseIcon = createLabel("", Font.PLAIN, 96);
+        lblMoonPhaseText = createLabel("", Font.BOLD, 16);
+        lblPhaseIcon1 = createLabel("", Font.PLAIN, 48);
+        lblPhaseIcon2 = createLabel("", Font.PLAIN, 48);
+        lblPhaseIcon3 = createLabel("", Font.PLAIN, 48);
+        lblPhaseIcon4 = createLabel("", Font.PLAIN, 48);
+        lblPhaseText1 = createLabel("", Font.BOLD, 16);
+        lblPhaseText2 = createLabel("", Font.BOLD, 16);
+        lblPhaseText3 = createLabel("", Font.BOLD, 16);
+        lblPhaseText4 = createLabel("", Font.BOLD, 16);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(lblDate, gbc);
+
+        gbc.gridy = 1;
+        panel.add(lblMoonPhaseIcon, gbc);
+
+        gbc.gridy = 2;
+        panel.add(lblMoonPhaseText, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(lblPhaseIcon1, gbc);
+        gbc.gridx = 1;
+        panel.add(lblPhaseIcon2, gbc);
+        gbc.gridx = 2;
+        panel.add(lblPhaseIcon3, gbc);
+        gbc.gridx = 3;
+        panel.add(lblPhaseIcon4, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        panel.add(lblPhaseText1, gbc);
+        gbc.gridx = 1;
+        panel.add(lblPhaseText2, gbc);
+        gbc.gridx = 2;
+        panel.add(lblPhaseText3, gbc);
+        gbc.gridx = 3;
+        panel.add(lblPhaseText4, gbc);
+
+        return panel;
+    }
+
+    private JPanel createSunrisePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        lblDate = createLabel("", Font.BOLD, 16);
+        lblDate.setHorizontalAlignment(SwingConstants.CENTER);
+        lblDate.setPreferredSize(new Dimension(200, 30));
+        panel.add(lblDate);
+
+        activityWaiting = new JProgressBar();
+        activityWaiting.setIndeterminate(true);
+        activityWaiting.setForeground(Color.ORANGE);
+        activityWaiting.setVisible(false);
+        panel.add(activityWaiting);
+
+        JPanel gridPanel = new JPanel(new GridLayout(3, 3, 5, 5));
+        gridPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        gridPanel.add(createLabel("🌅", Font.PLAIN, 72));
+        gridPanel.add(createLabel("☀️", Font.PLAIN, 72));
+        gridPanel.add(createLabel("🌇", Font.PLAIN, 72));
+
+        gridPanel.add(createLabel("Sunrise", Font.BOLD, 16));
+        gridPanel.add(createLabel("Daylight", Font.BOLD, 16));
+        gridPanel.add(createLabel("Sunset", Font.BOLD, 16));
+
+        lblSunrise = createLabel("", Font.PLAIN, 16);
+        lblSunrise.setHorizontalAlignment(SwingConstants.CENTER);
+        gridPanel.add(lblSunrise);
+
+        lblDaylight = createLabel("", Font.PLAIN, 16);
+        lblDaylight.setHorizontalAlignment(SwingConstants.CENTER);
+        gridPanel.add(lblDaylight);
+
+        lblSunset = createLabel("", Font.PLAIN, 16);
+        lblSunset.setHorizontalAlignment(SwingConstants.CENTER);
+        gridPanel.add(lblSunset);
+
+        panel.add(gridPanel);
+
+        return panel;
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return label;
+    }
+
+    private JLabel createLabel(String text, int fontStyle, int fontSize) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Serif", fontStyle, fontSize));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        return label;
+    }
+
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Serif", Font.PLAIN, 100));
+        button.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+        return button;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(AstronomyApp::new);
+    }
+}
