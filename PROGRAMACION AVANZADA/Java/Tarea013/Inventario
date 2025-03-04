@@ -1,0 +1,73 @@
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Inventario {
+    private List<Producto> productos;
+
+    // Constructor
+    public Inventario() {
+        this.productos = new ArrayList<>();
+    }
+
+    // Método para agregar un producto al inventario
+    public void agregarProducto(Producto producto) {
+        // Verificar si el producto ya existe en el inventario
+        if (buscarProducto(producto.getCodigo()) == null) {
+            productos.add(producto);
+            System.out.println("Producto agregado: " + producto.getNombre());
+        } else {
+            System.out.println("El producto con código " + producto.getCodigo() + " ya existe en el inventario.");
+        }
+    }
+
+    // Método para eliminar un producto del inventario por código
+    public void eliminarProducto(String codigo) {
+        Producto producto = buscarProducto(codigo);
+        if (producto != null) {
+            productos.remove(producto);
+            System.out.println("Producto eliminado: " + producto.getNombre());
+        } else {
+            System.out.println("Producto no encontrado.");
+        }
+    }
+
+    // Método para buscar un producto por código
+    public Producto buscarProducto(String codigo) {
+        return productos.stream()
+                .filter(p -> p.getCodigo().equals(codigo))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // Método para listar todos los productos
+    public List<Producto> listarProductos() {
+        return new ArrayList<>(productos); // Retorna una copia de la lista
+    }
+
+    // Método para agregar stock a un producto
+    public void agregarStock(String codigo, int cantidad) {
+        Producto producto = buscarProducto(codigo);
+        if (producto != null) {
+            producto.agregarStock(cantidad);
+            System.out.println("Se han agregado " + cantidad + " unidades al producto: " + producto.getNombre());
+        } else {
+            System.out.println("Producto no encontrado.");
+        }
+    }
+
+    // Método para reducir stock de un producto
+    public void reducirStock(String codigo, int cantidad) {
+        Producto producto = buscarProducto(codigo);
+        if (producto != null) {
+            try {
+                producto.reducirStock(cantidad);
+                System.out.println("Se han reducido " + cantidad + " unidades del producto: " + producto.getNombre());
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        } else {
+            System.out.println("Producto no encontrado.");
+        }
+    }
+}
