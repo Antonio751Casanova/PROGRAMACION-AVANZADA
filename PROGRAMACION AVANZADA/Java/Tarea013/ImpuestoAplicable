@@ -1,0 +1,4 @@
+
+public interface ImpuestoAplicable {
+	 double calcularImpuesto();
+}
