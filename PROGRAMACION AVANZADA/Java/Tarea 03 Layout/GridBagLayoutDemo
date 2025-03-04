@@ -1,0 +1,93 @@
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class GridBagLayoutDemo extends JFrame {
+
+    public GridBagLayoutDemo() {
+        // Configurar el layout del frame como GridBagLayout
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        // Crear los botones
+        JButton btn1 = new JButton("Button 1");
+        JButton btn2 = new JButton("Button 2");
+        JButton btn3 = new JButton("Button 3");
+        JButton btn4 = new JButton("Button 4");
+        JButton btn5 = new JButton("Button 5");
+        JButton btn6 = new JButton("Button 6");
+        JButton btn7 = new JButton("Button 7");
+        JButton btn8 = new JButton("Button 8");
+        JButton btn9 = new JButton("Button 9");
+
+        // Configurar propiedades comunes
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Agregar Button 1
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.gridheight = 1;
+        add(btn1, gbc);
+
+        // Agregar Button 2
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        add(btn2, gbc);
+
+        // Agregar Button 3
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        add(btn3, gbc);
+
+        // Agregar Button 4
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        add(btn4, gbc);
+
+        // Agregar Button 5
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        add(btn5, gbc);
+
+        // Agregar Button 6
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        add(btn6, gbc);
+
+        // Agregar Button 7
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 3;
+        add(btn7, gbc);
+
+        // Agregar Button 8
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 3;
+        add(btn8, gbc);
+
+        // Agregar Button 9
+        gbc.gridx = 3;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 2;
+        add(btn9, gbc);
+
+        // Configurar el frame
+        setTitle("GridBagLayout Demo");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new GridBagLayoutDemo();
+    }
+}
