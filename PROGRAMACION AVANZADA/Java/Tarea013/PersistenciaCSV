@@ -1,0 +1,32 @@
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PersistenciaCSV implements PersistenciaDatos<Producto> {
+    @Override
+    public void guardar(List<Producto> items, String archivo) {
+        // Implementación para guardar productos
+    }
+
+    @Override
+    public List<Producto> cargar(String archivo) {
+        List<Producto> items = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] datos = line.split(",");
+                if (datos.length == 4) { // Asegúrate de que hay 4 elementos
+                    Producto producto = new Producto(datos[0], datos[1], Double.parseDouble(datos[2]), Integer.parseInt(datos[3]));
+                    items.add(producto); // Esto debería funcionar si T es Producto
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("El archivo no se encontró: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo: " + e.getMessage());
+        }
+        return items;
+    }
+}
+
