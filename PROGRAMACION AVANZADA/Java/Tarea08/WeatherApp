@@ -1,0 +1,105 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class WeatherApp extends JFrame {
+    private JTextField txtPostalCode;
+    private JLabel lblCondition, lblTemperature, lblHumidity, lblPrecipitation, lblWind;
+    private JButton btnRefresh;
+    private JProgressBar actIsBusy;
+
+    public WeatherApp() {
+        setTitle("Weather App");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+
+        JLabel welcomeLabel = new JLabel("Welcome to the weather app! Press the 'Refresh' button to get the latest forecast. Remember to provide an address for the forecast!");
+        mainPanel.add(welcomeLabel);
+
+        JSeparator separator1 = new JSeparator();
+        mainPanel.add(separator1);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new FlowLayout());
+
+        JLabel lblPostalCode = new JLabel("Postal Code:");
+        inputPanel.add(lblPostalCode);
+
+        txtPostalCode = new JTextField(10);
+        inputPanel.add(txtPostalCode);
+
+        btnRefresh = new JButton("Refresh");
+        inputPanel.add(btnRefresh);
+
+        actIsBusy = new JProgressBar();
+        actIsBusy.setIndeterminate(true);
+        actIsBusy.setVisible(false);
+        inputPanel.add(actIsBusy);
+
+        mainPanel.add(inputPanel);
+
+        JSeparator separator2 = new JSeparator();
+        mainPanel.add(separator2);
+
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new GridLayout(5, 2));
+
+        lblCondition = new JLabel("Condition:");
+        infoPanel.add(lblCondition);
+        infoPanel.add(new JLabel(""));
+
+        lblTemperature = new JLabel("Temperature:");
+        infoPanel.add(lblTemperature);
+        infoPanel.add(new JLabel(""));
+
+        lblHumidity = new JLabel("Humidity:");
+        infoPanel.add(lblHumidity);
+        infoPanel.add(new JLabel(""));
+
+        lblPrecipitation = new JLabel("Precipitation:");
+        infoPanel.add(lblPrecipitation);
+        infoPanel.add(new JLabel(""));
+
+        lblWind = new JLabel("Wind:");
+        infoPanel.add(lblWind);
+        infoPanel.add(new JLabel(""));
+
+        mainPanel.add(infoPanel);
+
+        add(mainPanel, BorderLayout.CENTER);
+
+        btnRefresh.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                refreshWeather();
+            }
+        });
+    }
+
+    private void refreshWeather() {
+        actIsBusy.setVisible(true);
+        // Aquí iría la lógica para actualizar la información del clima
+        // Simulación de actualización
+        SwingUtilities.invokeLater(() -> {
+            lblCondition.setText("Condition: Sunny");
+            lblTemperature.setText("Temperature: 25°C");
+            lblHumidity.setText("Humidity: 60%");
+            lblPrecipitation.setText("Precipitation: 0%");
+            lblWind.setText("Wind: 10 km/h");
+            actIsBusy.setVisible(false);
+        });
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            WeatherApp app = new WeatherApp();
+            app.setVisible(true);
+        });
+    }
+}
