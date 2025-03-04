@@ -1,0 +1,133 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class AstronomicalBodyPage extends JFrame {
+    private JLabel lblIcon;
+    private JLabel lblName;
+    private JLabel lblMass;
+    private JLabel lblCircumference;
+    private JLabel lblAge;
+    private Map<String, AstronomicalBody> astroData;
+
+    public AstronomicalBodyPage(String astroName) {
+        setTitle("Astronomical Data");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Initialize data
+        initializeData();
+
+        // Background image
+        JLabel background = new JLabel(new ImageIcon("starfield.png"));
+        background.setLayout(new GridBagLayout());
+        setContentPane(background);
+
+        // Labels
+        lblIcon = new JLabel();
+        lblIcon.setFont(new Font("Serif", Font.PLAIN, 96));
+        lblName = new JLabel();
+        lblName.setFont(new Font("Serif", Font.BOLD, 16));
+        lblMass = new JLabel();
+        lblCircumference = new JLabel();
+        lblAge = new JLabel();
+
+        // Add components to the frame
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(lblIcon, gbc);
+
+        gbc.gridy = 1;
+        add(lblName, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        add(new JLabel("Mass:"), gbc);
+        gbc.gridy = 3;
+        add(new JLabel("Circumference:"), gbc);
+        gbc.gridy = 4;
+        add(new JLabel("Age:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        add(lblMass, gbc);
+        gbc.gridy = 3;
+        add(lblCircumference, gbc);
+        gbc.gridy = 4;
+        add(lblAge, gbc);
+
+        // Update UI with data
+        updateAstroBodyUI(astroName);
+
+        setVisible(true);
+    }
+
+    private void initializeData() {
+        astroData = new HashMap<>();
+        astroData.put("comet", new AstronomicalBody("Comet", "☄️", "2.2e14 kg", "11 km", "4.5 billion years"));
+        astroData.put("earth", new AstronomicalBody("Earth", "🌍", "5.97e24 kg", "40,075 km", "4.5 billion years"));
+        astroData.put("moon", new AstronomicalBody("Moon", "🌕", "7.35e22 kg", "10,921 km", "4.5 billion years"));
+        astroData.put("sun", new AstronomicalBody("Sun", "☀️", "1.99e30 kg", "4.37e6 km", "4.6 billion years"));
+    }
+
+    private void updateAstroBodyUI(String astroName) {
+        AstronomicalBody body = astroData.get(astroName.toLowerCase());
+        if (body != null) {
+            setTitle(body.getName());
+            lblIcon.setText(body.getEmojiIcon());
+            lblName.setText(body.getName());
+            lblMass.setText(body.getMass());
+            lblCircumference.setText(body.getCircumference());
+            lblAge.setText(body.getAge());
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new AstronomicalBodyPage("comet"));
+    }
+}
+
+class AstronomicalBody {
+    private String name;
+    private String emojiIcon;
+    private String mass;
+    private String circumference;
+    private String age;
+
+    public AstronomicalBody(String name, String emojiIcon, String mass, String circumference, String age) {
+        this.name = name;
+        this.emojiIcon = emojiIcon;
+        this.mass = mass;
+        this.circumference = circumference;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmojiIcon() {
+        return emojiIcon;
+    }
+
+    public String getMass() {
+        return mass;
+    }
+
+    public String getCircumference() {
+        return circumference;
+    }
+
+    public String getAge() {
+        return age;
+    }
+}
