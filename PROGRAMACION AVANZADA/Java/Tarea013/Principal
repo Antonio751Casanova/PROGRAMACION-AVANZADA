@@ -1,0 +1,32 @@
+
+import java.io.IOException;
+import java.util.List;
+
+public class Principal {
+    public static void main(String[] args) {
+        Inventario inventario = new Inventario();
+
+        // Agregar productos al inventario
+        inventario.agregarProducto(new Producto("001", "Arroz 1kg", 35, 10));
+        inventario.agregarProducto(new Producto("002", "Azúcar 1kg", 25, 10));
+
+        // Listar productos
+        List<Producto> productos = inventario.listarProductos();
+        for (Producto producto : productos) {
+            System.out.println("Producto: " + producto.getNombre() + ", Stock: " + producto.getStock());
+        }
+
+        // Buscar un producto
+        Producto productoBuscado = inventario.buscarProducto("001");
+        if (productoBuscado != null) {
+            System.out.println("Producto encontrado: " + productoBuscado.getNombre());
+        } else {
+            System.out.println("Producto no encontrado.");
+        }
+
+        // Reducir stock
+        inventario.reducirStock("001", 5);
+        System.out.println("Stock después de reducir: " + productoBuscado.getStock());
+    }
+}
+
