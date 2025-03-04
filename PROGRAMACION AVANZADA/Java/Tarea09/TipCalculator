@@ -1,0 +1,91 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class TipCalculator extends JFrame {
+    private JTextField billInput;
+    private JLabel tipOutput;
+    private JLabel totalOutput;
+    private Color colorNavy = Color.BLACK;
+    private Color colorSilver = Color.WHITE;
+
+    public TipCalculator() {
+        setTitle("Standard Tip");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(5, 2, 10, 10));
+
+        // Static labels
+        JLabel billLabel = new JLabel("Bill");
+        JLabel tipLabel = new JLabel("Tip");
+        JLabel totalLabel = new JLabel("Total");
+
+        // User input and calculated-value output
+        billInput = new JTextField();
+        tipOutput = new JLabel("0.00");
+        totalOutput = new JLabel("0.00");
+
+        // Buttons
+        JButton customCalcButton = new JButton("Use Custom Calculator");
+        JButton lightButton = new JButton("Light");
+        JButton darkButton = new JButton("Dark");
+
+        // Add components to the frame
+        add(billLabel);
+        add(billInput);
+        add(tipLabel);
+        add(tipOutput);
+        add(totalLabel);
+        add(totalOutput);
+        add(customCalcButton);
+        add(new JPanel()); // Empty cell
+        add(lightButton);
+        add(darkButton);
+
+        // Event listeners
+        billInput.addActionListener(e -> calculateTip());
+        lightButton.addActionListener(e -> setLightMode());
+        darkButton.addActionListener(e -> setDarkMode());
+        customCalcButton.addActionListener(e -> gotoCustom());
+
+        setVisible(true);
+    }
+
+    private void calculateTip() {
+        try {
+            double bill = Double.parseDouble(billInput.getText());
+            if (bill > 0) {
+                double tip = Math.round(bill * 0.15 * 100.0) / 100.0;
+                double finalAmount = bill + tip;
+                tipOutput.setText(String.format("$%.2f", tip));
+                totalOutput.setText(String.format("$%.2f", finalAmount));
+            }
+        } catch (NumberFormatException e) {
+            // Handle invalid input
+        }
+    }
+
+    private void setLightMode() {
+        getContentPane().setBackground(colorSilver);
+        billInput.setForeground(colorNavy);
+        tipOutput.setForeground(colorNavy);
+        totalOutput.setForeground(colorNavy);
+    }
+
+    private void setDarkMode() {
+        getContentPane().setBackground(colorNavy);
+        billInput.setForeground(colorSilver);
+        tipOutput.setForeground(colorSilver);
+        totalOutput.setForeground(colorSilver);
+    }
+
+    private void gotoCustom() {
+        // Navigate to custom calculator page (implementation needed)
+    }
+
+    public static void main(String[] args) {
+        new TipCalculator();
+    }
+}
