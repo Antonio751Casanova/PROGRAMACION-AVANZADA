@@ -1,0 +1,136 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Calculadora extends JFrame {
+
+    private JButton pantalla; // Botón que simula el display
+    private boolean principio; // Variable para manejar el estado inicial
+    private double resultado; // Variable para almacenar el resultado de las operaciones
+    private String ultimaOperacion; // Variable para almacenar la última operación realizada
+
+    public Calculadora() {
+        setTitle("Calculadora");
+        setSize(450, 300);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // Crear la lámina principal con BorderLayout
+        JPanel laminaPrincipal = new JPanel();
+        laminaPrincipal.setLayout(new BorderLayout());
+
+        // Crear el display (botón que simula la pantalla)
+        pantalla = new JButton("0");
+        pantalla.setEnabled(false); // Deshabilitar el botón para que no sea clickeable
+        laminaPrincipal.add(pantalla, BorderLayout.NORTH); // Agregar el display en la zona norte
+
+        // Crear la segunda lámina con GridLayout (4x4)
+        JPanel laminaBotones = new JPanel();
+        laminaBotones.setLayout(new GridLayout(4, 4));
+
+        // Agregar los botones a la segunda lámina
+        agregarBotones(laminaBotones);
+
+        // Agregar la segunda lámina a la zona central de la lámina principal
+        laminaPrincipal.add(laminaBotones, BorderLayout.CENTER);
+
+        // Agregar la lámina principal al marco
+        add(laminaPrincipal);
+
+        // Inicializar la variable últimaOperación
+        ultimaOperacion = "=";
+
+        setVisible(true);
+    }
+
+    // Método para agregar los botones a la lámina
+    private void agregarBotones(JPanel lamina) {
+        // Botones de la calculadora
+        String[] botones = {
+            "7", "8", "9", "/",
+            "4", "5", "6", "*",
+            "1", "2", "3", "-",
+            "0", ".", "=", "+"
+        };
+
+        // Crear una instancia de la clase que gestiona los eventos de los números
+        ActionListener oyenteNumeros = new InsertaNumero();
+
+        // Crear una instancia de la clase que gestiona los eventos de las operaciones
+        ActionListener oyenteOperaciones = new AccionOrden();
+
+        // Agregar los botones a la lámina
+        for (String textoBoton : botones) {
+            JButton boton = new JButton(textoBoton);
+
+            // Poner los botones numéricos y el punto a la escucha de InsertaNumero
+            if (textoBoton.equals("+") || textoBoton.equals("-") || textoBoton.equals("*") || textoBoton.equals("/") || textoBoton.equals("=")) {
+                boton.addActionListener(oyenteOperaciones);
+            } else {
+                boton.addActionListener(oyenteNumeros);
+            }
+
+            lamina.add(boton);
+        }
+    }
+
+    // Clase interna para gestionar los eventos de los números
+    private class InsertaNumero implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // Capturar el texto del botón pulsado
+            String entrada = e.getActionCommand();
+
+            // Si es el primer número, borrar el display
+            if (principio) {
+                pantalla.setText("");
+                principio = false;
+            }
+
+            // Concatenar el nuevo número al display
+            pantalla.setText(pantalla.getText() + entrada);
+        }
+    }
+
+    // Clase interna para gestionar los eventos de las operaciones
+    private class AccionOrden implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // Capturar la operación pulsada
+            String operacion = e.getActionCommand();
+
+            // Calcular el resultado de la operación anterior
+            calcular(Double.parseDouble(pantalla.getText()));
+
+            // Actualizar la última operación realizada
+            ultimaOperacion = operacion;
+
+            // Reiniciar el estado para el siguiente número
+            principio = true;
+        }
+    }
+
+    // Método para realizar las operaciones matemáticas
+    private void calcular(double x) {
+        if (ultimaOperacion.equals("+")) {
+            resultado += x;
+        } else if (ultimaOperacion.equals("-")) {
+            resultado -= x;
+        } else if (ultimaOperacion.equals("*")) {
+            resultado *= x;
+        } else if (ultimaOperacion.equals("/")) {
+            resultado /= x;
+        } else if (ultimaOperacion.equals("=")) {
+            resultado = x;
+        }
+
+        // Mostrar el resultado en el display
+        pantalla.setText("" + resultado);
+    }
+
+    public static void main(String[] args) {
+        // Crear una instancia de la clase Calculadora
+        new Calculadora();
+    }
+}
