@@ -1,0 +1,96 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Alignment extends JFrame {
+    private JLabel target;
+
+    public Alignment() {
+        setTitle("Alignment");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        // Horizontal alignment buttons
+        JPanel horizontalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        horizontalPanel.add(new JLabel("Horizontal"));
+        addButton(horizontalPanel, "Start", e -> onHorizontalStartClicked());
+        addButton(horizontalPanel, "Center", e -> onHorizontalCenterClicked());
+        addButton(horizontalPanel, "End", e -> onHorizontalEndClicked());
+        addButton(horizontalPanel, "Fill", e -> onHorizontalFillClicked());
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        add(horizontalPanel, gbc);
+
+        // Vertical alignment buttons
+        JPanel verticalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        verticalPanel.add(new JLabel("Vertical"));
+        addButton(verticalPanel, "Start", e -> onVerticalStartClicked());
+        addButton(verticalPanel, "Center", e -> onVerticalCenterClicked());
+        addButton(verticalPanel, "End", e -> onVerticalEndClicked());
+        addButton(verticalPanel, "Fill", e -> onVerticalFillClicked());
+        gbc.gridy = 1;
+        add(verticalPanel, gbc);
+
+        // Target label
+        target = new JLabel("Hello", SwingConstants.CENTER);
+        target.setOpaque(true);
+        target.setBackground(Color.LIGHT_GRAY);
+        target.setFont(new Font("Arial", Font.PLAIN, 25));
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        add(target, gbc);
+    }
+
+    private void addButton(JPanel panel, String text, ActionListener actionListener) {
+        JButton button = new JButton(text);
+        button.addActionListener(actionListener);
+        panel.add(button);
+    }
+
+    private void onHorizontalStartClicked() {
+        target.setHorizontalAlignment(SwingConstants.LEFT);
+    }
+
+    private void onHorizontalCenterClicked() {
+        target.setHorizontalAlignment(SwingConstants.CENTER);
+    }
+
+    private void onHorizontalEndClicked() {
+        target.setHorizontalAlignment(SwingConstants.RIGHT);
+    }
+
+    private void onHorizontalFillClicked() {
+        target.setHorizontalAlignment(SwingConstants.CENTER); // Swing doesn't support fill, so center is used
+    }
+
+    private void onVerticalStartClicked() {
+        target.setVerticalAlignment(SwingConstants.TOP);
+    }
+
+    private void onVerticalCenterClicked() {
+        target.setVerticalAlignment(SwingConstants.CENTER);
+    }
+
+    private void onVerticalEndClicked() {
+        target.setVerticalAlignment(SwingConstants.BOTTOM);
+    }
+
+    private void onVerticalFillClicked() {
+        target.setVerticalAlignment(SwingConstants.CENTER); // Swing doesn't support fill, so center is used
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Alignment frame = new Alignment();
+            frame.setVisible(true);
+        });
+    }
+}
