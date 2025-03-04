@@ -1,0 +1,41 @@
+
+import javax.swing.*;
+import java.awt.*;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class CursoJava extends JFrame {
+
+    public CursoJava() {
+        setTitle("Curso de Programación en Java");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // Crear la primera lámina con FlowLayout (alineación a la izquierda)
+        JPanel lamina1 = new JPanel();
+        lamina1.setLayout(new FlowLayout(FlowLayout.LEFT));
+        lamina1.add(new JButton("Amarillo"));
+        lamina1.add(new JButton("Rojo"));
+
+        // Crear la segunda lámina con BorderLayout
+        JPanel lamina2 = new JPanel();
+        lamina2.setLayout(new BorderLayout());
+        lamina2.add(new JButton("Azul"), BorderLayout.WEST);
+        lamina2.add(new JButton("Verde"), BorderLayout.EAST);
+        lamina2.add(new JButton("Negro"), BorderLayout.CENTER);
+
+        // Agregar las láminas al marco con BorderLayout
+        setLayout(new BorderLayout());
+        add(lamina1, BorderLayout.NORTH);
+        add(lamina2, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        // Crear una instancia de la clase CursoJava
+        new CursoJava();
+    }
+}
