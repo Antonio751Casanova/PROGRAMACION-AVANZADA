@@ -1,0 +1,75 @@
+
+public class flashcard_modelo {
+    private int intentos;
+    private int correctos;
+
+    public flashcard_modelo() {
+        intentos = 0;
+        correctos = 0;
+    }
+
+    // Métodos para incrementar los intentos y correctos
+    public void incrementarIntentos() {
+        intentos++;
+    }
+
+    public void incrementarCorrectos() {
+        correctos++;
+    }
+
+    // Getters para obtener los valores de intentos y correctos
+    public int getIntentos() {
+        return intentos;
+    }
+
+    public int getCorrectos() {
+        return correctos;
+    }
+
+    // Método para generar una operación matemática
+    public String generarOperacion(String operacion) {
+        int num1 = (int) (Math.random() * 10);
+        int num2 = (int) (Math.random() * 10);
+        String pregunta = "";
+
+        switch (operacion) {
+            case "Suma":
+                pregunta = num1 + " + " + num2 + " = ?";
+                break;
+            case "Resta":
+                pregunta = num1 + " - " + num2 + " = ?";
+                break;
+            case "Multiplicación":
+                pregunta = num1 + " * " + num2 + " = ?";
+                break;
+            case "División":
+                // Evitar división entre 0
+                num2 = num2 == 0 ? 1 : num2;
+                pregunta = num1 + " / " + num2 + " = ?";
+                break;
+        }
+        return pregunta;
+    }
+
+    // Método para verificar la respuesta
+    public boolean verificarRespuesta(String operacion, int num1, int num2, int respuesta) {
+        int resultadoCorrecto = 0;
+        switch (operacion) {
+            case "Suma":
+                resultadoCorrecto = num1 + num2;
+                break;
+            case "Resta":
+                resultadoCorrecto = num1 - num2;
+                break;
+            case "Multiplicación":
+                resultadoCorrecto = num1 * num2;
+                break;
+            case "División":
+                resultadoCorrecto = num1 / num2;
+                break;
+        }
+        return resultadoCorrecto == respuesta;
+    }
+}
+
+
