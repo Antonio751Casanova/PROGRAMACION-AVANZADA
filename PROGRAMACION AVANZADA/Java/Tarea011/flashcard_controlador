@@ -1,0 +1,92 @@
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class flashcard_controlador {
+    private flashcard_vista vista;
+    private flashcard_modelo modelo;
+    private int num1, num2;  // Variables para almacenar los números de la operación actual
+    private String operacionActual;
+
+    public flashcard_controlador(flashcard_vista vista, flashcard_modelo modelo) {
+        this.vista = vista;
+        this.modelo = modelo;
+
+        // Acción para iniciar la práctica
+        this.vista.BiniciarPractica.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                modelo.incrementarIntentos();
+                vista.Tintentos.setText(String.valueOf(modelo.getIntentos()));
+
+                // Obtener la operación seleccionada
+                operacionActual = obtenerOperacionSeleccionada();
+                
+                // Generar una operación y mostrarla
+                num1 = (int) (Math.random() * 10);
+                num2 = (int) (Math.random() * 10);
+                String pregunta = generarPregunta(operacionActual, num1, num2);
+                vista.Ttarjeta.setText(pregunta);
+            }
+        });
+
+        // Acción para verificar la respuesta
+        this.vista.Bverificar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int respuestaUsuario = Integer.parseInt(vista.Trespuesta.getText());
+                    boolean esCorrecta = modelo.verificarRespuesta(operacionActual, num1, num2, respuestaUsuario);
+                    
+                    if (esCorrecta) {
+                        modelo.incrementarCorrectos();
+                        vista.Tcorrectos.setText(String.valueOf(modelo.getCorrectos()));
+                    } else {
+                        System.out.println("Respuesta incorrecta");
+                    }
+                    
+                } catch (NumberFormatException ex) {
+                    System.out.println("Por favor ingresa un número válido.");
+                }
+            }
+        });
+
+        // Acción para salir
+        this.vista.Bsalir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+    }
+
+    // Método para obtener la operación seleccionada
+    private String obtenerOperacionSeleccionada() {
+        if (vista.Rsuma.isSelected()) {
+            return "Suma";
+        } else if (vista.Rresta.isSelected()) {
+            return "Resta";
+        } else if (vista.Rmultiplicacion.isSelected()) {
+            return "Multiplicación";
+        } else {
+            return "División";
+        }
+    }
+
+    // Método para generar una pregunta basada en la operación
+    private String generarPregunta(String operacion, int num1, int num2) {
+        switch (operacion) {
+            case "Suma":
+                return num1 + " + " + num2 + " = ?";
+            case "Resta":
+                return num1 + " - " + num2 + " = ?";
+            case "Multiplicación":
+                return num1 + " * " + num2 + " = ?";
+            case "División":
+                num2 = (num2 == 0) ? 1 : num2; // Evitar división entre 0
+                return num1 + " / " + num2 + " = ?";
+            default:
+                return "";
+        }
+    }
+}
