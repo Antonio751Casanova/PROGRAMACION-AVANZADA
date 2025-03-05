@@ -1,0 +1,66 @@
+
+import javax.swing.*;
+import java.awt.*;
+
+public class flashcard_vista extends JFrame {
+    public JTextField Tintentos, Tcorrectos, Ttarjeta, Trespuesta;
+    public JRadioButton Rsuma, Rresta, Rmultiplicacion, Rdivision;
+    public JButton BiniciarPractica, Bverificar, Bsalir;
+
+    public flashcard_vista() {
+        setTitle("Tarjetas Matemáticas");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Panel superior (Intentos y Correctos)
+        JPanel panelSuperior = new JPanel();
+        panelSuperior.add(new JLabel("Intentos:"));
+        Tintentos = new JTextField(5);
+        Tintentos.setEditable(false);
+        panelSuperior.add(Tintentos);
+        panelSuperior.add(new JLabel("Correctos:"));
+        Tcorrectos = new JTextField(5);
+        Tcorrectos.setEditable(false);
+        panelSuperior.add(Tcorrectos);
+        add(panelSuperior, BorderLayout.NORTH);
+
+        // Panel central (Tarjeta Matemática)
+        Ttarjeta = new JTextField(20);
+        Ttarjeta.setFont(new Font("Arial", Font.PLAIN, 24));
+        Ttarjeta.setHorizontalAlignment(JTextField.CENTER);
+        Ttarjeta.setEditable(false); // Solo lectura para la pregunta
+        add(Ttarjeta, BorderLayout.CENTER);
+
+        // Panel inferior (Controles y Respuesta)
+        JPanel panelInferior = new JPanel();
+        Rsuma = new JRadioButton("Suma");
+        Rresta = new JRadioButton("Resta");
+        Rmultiplicacion = new JRadioButton("Multiplicación");
+        Rdivision = new JRadioButton("División");
+        ButtonGroup grupoOperaciones = new ButtonGroup();
+        grupoOperaciones.add(Rsuma);
+        grupoOperaciones.add(Rresta);
+        grupoOperaciones.add(Rmultiplicacion);
+        grupoOperaciones.add(Rdivision);
+        panelInferior.add(Rsuma);
+        panelInferior.add(Rresta);
+        panelInferior.add(Rmultiplicacion);
+        panelInferior.add(Rdivision);
+
+        // Campo para la respuesta del usuario
+        panelInferior.add(new JLabel("Respuesta:"));
+        Trespuesta = new JTextField(5);
+        panelInferior.add(Trespuesta);
+
+        // Botones
+        BiniciarPractica = new JButton("Iniciar Práctica");
+        Bverificar = new JButton("Verificar Respuesta"); // Nuevo botón para verificar la respuesta
+        Bsalir = new JButton("Salir");
+        panelInferior.add(BiniciarPractica);
+        panelInferior.add(Bverificar); // Añadimos el botón
+        panelInferior.add(Bsalir);
+
+        add(panelInferior, BorderLayout.SOUTH);
+    }
+}
