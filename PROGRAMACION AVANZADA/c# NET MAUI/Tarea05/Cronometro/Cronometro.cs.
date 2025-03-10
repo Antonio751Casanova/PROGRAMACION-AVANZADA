@@ -1,0 +1,47 @@
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace Cronometro
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        long inicio, detener;
+        double transcurrido;
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Biniciar_Click(object sender, RoutedEventArgs e)
+        {
+            this.inicio = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            this.Tiniciar.Text = this.inicio.ToString();
+            this.Tdetener.Text = "";
+            this.Ttranscurrido.Text = "";
+        }
+
+        private void Bdetener_Click(object sender, RoutedEventArgs e)
+        {
+            this.detener = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            this.Tdetener.Text = this.detener.ToString();
+            this.transcurrido = (this.detener - this.inicio)/1000;
+            this.Ttranscurrido.Text = this.transcurrido.ToString();
+        }
+
+        private void Bsalir_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+    }
+}
