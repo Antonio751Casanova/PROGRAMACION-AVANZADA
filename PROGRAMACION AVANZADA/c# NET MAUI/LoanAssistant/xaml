@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LoanAssistant.MainPage">
+
+    <StackLayout Padding="10">
+        <!-- Panel superior (Loan Balance y Interest Rate) -->
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Loan Balance" VerticalOptions="Center" />
+            <Entry x:Name="balanceTextField" WidthRequest="150"/>
+        </StackLayout>
+
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Interest Rate" VerticalOptions="Center" />
+            <Entry x:Name="interestTextField" WidthRequest="150"/>
+        </StackLayout>
+
+        <!-- Panel central (Number of Payments y Monthly Payment) -->
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Number of Payments" VerticalOptions="Center" />
+            <Entry x:Name="monthsTextField" WidthRequest="150"/>
+        </StackLayout>
+
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Monthly Payment" VerticalOptions="Center" />
+            <Entry x:Name="paymentTextField" WidthRequest="150"/>
+        </StackLayout>
+
+        <!-- Botones -->
+        <Button x:Name="computeButton" Text="Compute Monthly Payment"/>
+        <Button x:Name="newLoanButton" Text="New Loan Analysis" IsEnabled="False"/>
+
+        <!-- Panel inferior (Analysis Text Area y Exit Button) -->
+        <Editor x:Name="analysisTextArea" HeightRequest="200" IsReadOnly="True"/>
+        <Button x:Name="exitButton" Text="Exit"/>
+    </StackLayout>
+</ContentPage>
