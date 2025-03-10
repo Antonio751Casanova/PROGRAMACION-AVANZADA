@@ -1,0 +1,34 @@
+using System.Windows;
+
+namespace CheckBoxExample
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void BtnTotal_Click(object sender, RoutedEventArgs e)
+        {
+            int cantidad = int.Parse(txtCantidad.Text);
+            double total = 25.0;
+
+            if (chkCebolla.IsChecked == true)
+            {
+                total += 1.0;
+            }
+            if (chkJitomate.IsChecked == true)
+            {
+                total += 3.5;
+            }
+            if (chkPapas.IsChecked == true)
+            {
+                total += 12.35;
+            }
+
+            double granTotal = total * cantidad;
+            txtTotal.Text = $"${granTotal:F2}";
+        }
+    }
+}
