@@ -1,0 +1,104 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace Programa07
+{
+    /// <summary>
+    /// Lógica de interacción para Programa07_b.xaml
+    /// </summary>
+    public partial class Programa07_b : Window
+    {
+        Ventanahijo hijo1;
+        public Programa07_b()
+        {
+            InitializeComponent();
+        }
+
+        private void MOventa(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOreporteventa(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOinventario(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOreporteinventario(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOproductos(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOcategorias(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOreportecategorias(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOsalir(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void MOacerca(object sender, RoutedEventArgs e)
+        {
+            this.evaluareventos(sender);
+        }
+
+        private void evaluareventos(object causante)
+        {
+            if (causante is MenuItem)
+            {
+                MenuItem objeto = (MenuItem)causante;
+                string cadena = objeto.Header.ToString();
+                MessageBox.Show(cadena + "...... " + objeto.Name.ToString());
+
+                switch (cadena)
+                {
+                    case "Salir":
+                        this.Close();
+                        break;
+                    default:
+                        hijo1 = new Ventanahijo(cadena, this);
+                        hijo1.Show();
+                        break;
+                }
+            }
+            else
+            {
+                if (causante is Button)
+                {
+                    Button objeto = (Button)causante;
+                    string cadena = objeto.Content.ToString();
+                    MessageBox.Show(cadena);
+
+                }
+            }//fin si es menuitem
+        }
+    }
+}
