@@ -1,0 +1,56 @@
+using Microsoft.Maui.Controls;
+using System;
+
+namespace LoanAssistant
+{
+    public partial class MainPage : ContentPage
+    {
+        public MainPage()
+        {
+            InitializeComponent();
+            computeButton.Clicked += OnComputeButtonClicked;
+            newLoanButton.Clicked += OnNewLoanButtonClicked;
+            exitButton.Clicked += OnExitButtonClicked;
+        }
+
+        private void OnComputeButtonClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                double balance = double.Parse(balanceTextField.Text);
+                double interest = double.Parse(interestTextField.Text);
+                int months = int.Parse(monthsTextField.Text);
+                double monthlyInterest = interest / 1200;
+
+                double multiplier = Math.Pow(1 + monthlyInterest, months);
+                double payment = balance * monthlyInterest * multiplier / (multiplier - 1);
+
+                paymentTextField.Text = payment.ToString("0.00");
+                analysisTextArea.Text = $"Loan Analysis:\n" +
+                                        $"Loan Balance: ${balance:0.00}\n" +
+                                        $"Interest Rate: {interest}%\n" +
+                                        $"Monthly Payment: ${payment:0.00}\n";
+
+                computeButton.IsEnabled = false;
+                newLoanButton.IsEnabled = true;
+            }
+            catch (FormatException)
+            {
+                DisplayAlert("Error", "Please enter valid numeric values.", "OK");
+            }
+        }
+
+        private void OnNewLoanButtonClicked(object sender, EventArgs e)
+        {
+            paymentTextField.Text = string.Empty;
+            analysisTextArea.Text = string.Empty;
+            computeButton.IsEnabled = true;
+            newLoanButton.IsEnabled = false;
+        }
+
+        private void OnExitButtonClicked(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.GetCurrentProcess().CloseMainWindow();
+        }
+    }
+}
