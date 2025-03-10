@@ -1,0 +1,30 @@
+<Window x:Class="Programa07.programa07_a"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Programa07"
+        mc:Ignorable="d"
+        Title="programa07_a" Height="450" Width="800">
+    <Grid>
+        <Menu x:Name="MenuPrincipal" HorizontalAlignment="Left">
+        <MenuItem Header="Ventas">
+            <MenuItem Header="Punto de Venta" Click="MOventa"/>
+            <MenuItem Header="Reporte Venta" Click="MOreporteventa"/>
+        </MenuItem>
+        <MenuItem Header="Almacen">
+            <MenuItem Header="Inventario" Click="MOinventario"/>
+            <MenuItem Header="Reporte Inventario" Click="MOreporteinventario"/>
+        </MenuItem>
+        <MenuItem Header="Configuracion">
+            <MenuItem Header="Productos" Click="MOproductos"/>
+            <MenuItem Header="Categorias" Click="MOcategorias"/>
+            <MenuItem Header="Reporte Productos Categorias" Click="MOreportecategorias"/>
+        </MenuItem>
+        <MenuItem Header="Salida">
+            <MenuItem Header="Salir" Click="MOsalir"/>
+            <MenuItem Header="Acerca" Click="Moacerca"/>
+            </MenuItem>
+    </Menu>
+    </Grid>
+</Window>
