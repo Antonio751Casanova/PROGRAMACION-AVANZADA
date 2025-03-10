@@ -1,0 +1,38 @@
+using System.Windows;
+using System.Windows.Controls;
+
+namespace ComboBoxExample
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void BtnSeleccionar_Click(object sender, RoutedEventArgs e)
+        {
+            if (comboBoxFrutas.SelectedItem is ComboBoxItem selectedItem)
+            {
+                TextBlock selectedTextBlock = selectedItem.Content as TextBlock;
+                if (selectedTextBlock != null)
+                {
+                    MessageBox.Show($"Fruta seleccionada: {selectedTextBlock.Text}", "Fruta Seleccionada");
+                }
+            }
+        }
+
+        private void BtnAdicionar_Click(object sender, RoutedEventArgs e)
+        {
+            string nuevaFruta = txtFruta.Text;
+            if (!string.IsNullOrWhiteSpace(nuevaFruta))
+            {
+                ComboBoxItem newItem = new ComboBoxItem();
+                TextBlock newTextBlock = new TextBlock { Text = nuevaFruta };
+                newItem.Content = newTextBlock;
+                comboBoxFrutas.Items.Add(newItem);
+                txtFruta.Clear();
+            }
+        }
+    }
+}
