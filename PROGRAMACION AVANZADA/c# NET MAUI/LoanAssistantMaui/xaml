@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FlashcardApp.MainPage">
+
+    <StackLayout>
+        <!-- Panel superior (Intentos y Correctos) -->
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Intentos:" VerticalOptions="Center" />
+            <!-- Etiqueta para "Intentos" -->
+            <Entry x:Name="Tintentos" IsReadOnly="True" WidthRequest="50"/>
+            <!-- Campo de texto no editable para Intentos -->
+            <Label Text="Correctos:" VerticalOptions="Center" />
+            <!-- Etiqueta para "Correctos" -->
+            <Entry x:Name="Tcorrectos" IsReadOnly="True" WidthRequest="50"/>
+            <!-- Campo de texto no editable para Correctos -->
+        </StackLayout>
+
+        <!-- Panel central (Tarjeta Matemática) -->
+        <Entry x:Name="Ttarjeta" FontSize="24" HorizontalTextAlignment="Center" IsReadOnly="True"/>
+        <!-- Campo de texto no editable para la pregunta matemática -->
+
+        <!-- Panel inferior (Controles y Respuesta) -->
+        <StackLayout>
+            <RadioButton x:Name="Rsuma" Content="Suma"/>
+            <!-- Botón de opción para Suma -->
+            <RadioButton x:Name="Rresta" Content="Resta"/>
+            <!-- Botón de opción para Resta -->
+            <RadioButton x:Name="Rmultiplicacion" Content="Multiplicación"/>
+            <!-- Botón de opción para Multiplicación -->
+            <RadioButton x:Name="Rdivision" Content="División"/>
+            <!-- Botón de opción para División -->
+            <Label Text="Respuesta:" />
+            <!-- Etiqueta para "Respuesta" -->
+            <Entry x:Name="Trespuesta" />
+            <!-- Campo de texto para la respuesta del usuario -->
+            <Button x:Name="BiniciarPractica" Text="Iniciar Práctica"/>
+            <!-- Botón para iniciar la práctica -->
+            <Button x:Name="Bverificar" Text="Verificar Respuesta"/>
+            <!-- Botón para verificar la respuesta -->
+            <Button x:Name="Bsalir" Text="Salir"/>
+            <!-- Botón para salir de la aplicación -->
+        </StackLayout>
+    </StackLayout>
+</ContentPage>
+
