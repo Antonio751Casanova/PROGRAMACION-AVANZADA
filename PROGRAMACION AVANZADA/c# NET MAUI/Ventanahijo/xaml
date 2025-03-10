@@ -1,0 +1,13 @@
+<Window x:Class="Programa07.Ventanahijo"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Programa07"
+        mc:Ignorable="d"
+        Title="Ventanahijo" Height="450" Width="800">
+    <Grid>
+        <Button x:Name="Bregresar" Content="Regresar" HorizontalAlignment="Left" Height="135" Margin="212,145,0,0" VerticalAlignment="Top" Width="405" Click="Bregresar_Click"/>
+
+    </Grid>
+</Window>
