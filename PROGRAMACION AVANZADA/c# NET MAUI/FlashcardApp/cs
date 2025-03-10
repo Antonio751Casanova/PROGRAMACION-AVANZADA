@@ -1,0 +1,92 @@
+using Microsoft.Maui.Controls;
+using System;
+
+namespace FlashcardApp
+{
+    public partial class MainPage : ContentPage
+    {
+        private int num1, num2;
+        private string operacionActual;
+        private int intentos = 0;
+        private int correctos = 0;
+
+        public MainPage()
+        {
+            InitializeComponent();
+            BiniciarPractica.Clicked += OnIniciarPracticaClicked; // Acción para el botón "Iniciar Práctica"
+            Bverificar.Clicked += OnVerificarClicked; // Acción para el botón "Verificar Respuesta"
+            Bsalir.Clicked += OnSalirClicked; // Acción para el botón "Salir"
+        }
+
+        private void OnIniciarPracticaClicked(object sender, EventArgs e)
+        {
+            IncrementarIntentos(); // Incrementar el contador de intentos
+            Tintentos.Text = intentos.ToString(); // Actualizar el campo de texto para mostrar los intentos
+            operacionActual = ObtenerOperacionSeleccionada(); // Obtener la operación seleccionada por el usuario
+            num1 = new Random().Next(0, 10); // Generar un número aleatorio
+            num2 = new Random().Next(0, 10); // Generar otro número aleatorio
+            Ttarjeta.Text = GenerarPregunta(operacionActual, num1, num2); // Generar y mostrar la pregunta
+        }
+
+        private void OnVerificarClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                int respuestaUsuario = int.Parse(Trespuesta.Text); // Obtener la respuesta del usuario
+                if (VerificarRespuesta(operacionActual, num1, num2, respuestaUsuario))
+                {
+                    IncrementarCorrectos(); // Incrementar el contador de respuestas correctas
+                    Tcorrectos.Text = correctos.ToString(); // Actualizar el campo de texto para mostrar las respuestas correctas
+                }
+                else
+                {
+                    Console.WriteLine("Respuesta incorrecta");
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Por favor ingresa un número válido.");
+            }
+        }
+
+        private void OnSalirClicked(object sender, EventArgs e)
+        {
+            Environment.Exit(0); // Cerrar la aplicación
+        }
+
+        // Métodos auxiliares
+        private void IncrementarIntentos() => intentos++; // Incrementar el contador de intentos
+        private void IncrementarCorrectos() => correctos++; // Incrementar el contador de respuestas correctas
+        private string ObtenerOperacionSeleccionada()
+        {
+            if (Rsuma.IsChecked) return "Suma"; // Verificar si la opción seleccionada es Suma
+            if (Rresta.IsChecked) return "Resta"; // Verificar si la opción seleccionada es Resta
+            if (Rmultiplicacion.IsChecked) return "Multiplicación"; // Verificar si la opción seleccionada es Multiplicación
+            return "División"; // Asumir que la opción seleccionada es División si ninguna de las anteriores es cierta
+        }
+
+        private string GenerarPregunta(string operacion, int num1, int num2)
+        {
+            return operacion switch
+            {
+                "Suma" => $"{num1} + {num2} = ?",
+                "Resta" => $"{num1} - {num2} = ?",
+                "Multiplicación" => $"{num1} * {num2} = ?",
+                _ => $"{num1} / {(num2 == 0 ? 1 : num2)} = ?"
+            }; // Generar y devolver la pregunta basada en la operación seleccionada
+        }
+
+        private bool VerificarRespuesta(string operacion, int num1, int num2, int respuesta)
+        {
+            int resultadoCorrecto = operacion switch
+            {
+                "Suma" => num1 + num2,
+                "Resta" => num1 - num2,
+                "Multiplicación" => num1 * num2,
+                "División" => num1 / (num2 == 0 ? 1 : num2),
+                _ => 0
+            }; // Calcular la respuesta correcta basada en la operación y los números
+            return resultadoCorrecto == respuesta; // Verificar si la respuesta del usuario es correcta
+        }
+    }
+}
