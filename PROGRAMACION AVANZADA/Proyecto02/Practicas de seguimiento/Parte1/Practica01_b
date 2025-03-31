@@ -1,0 +1,255 @@
+package Parte1;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JList;
+import javax.swing.ScrollPaneConstants;
+
+import Libreria.Archivotxt;
+import Modelo.Categoria;
+import Modelo.Insumo;
+import Modelo.ListaCategorias;
+import Modelo.ListaInsumos;
+
+public class Practica01_b extends JFrame implements ActionListener {
+
+    // Objetos para manejo de datos
+    private ListaInsumos listainsumo;
+    private ListaCategorias listacategorias;
+    private Archivotxt archivocategorias;
+    private Archivotxt archivoinsumos;
+    
+    // Componentes de la interfaz
+    private JList<Categoria> ListaCategoria;
+    private JTextField Tid, Tinsumo;
+    private JButton Bagregar, Beliminar, Bsalir;
+    private JTextArea areaProductos;
+    private DefaultListModel<Categoria> modelocategoria;
+    private JPanel panelFormulario;
+
+    public Practica01_b() {
+        super("Administración de Productos");
+        inicializarComponentes();
+        configurarVentana();
+        cargarDatosIniciales();
+        setVisible(true);
+    }
+
+    private void inicializarComponentes() {
+        // Inicialización de objetos de datos
+        this.archivocategorias = new Archivotxt("Categoria");
+        this.archivoinsumos = new Archivotxt("Insumos");
+        this.listacategorias = new ListaCategorias();
+        this.listainsumo = new ListaInsumos();
+        
+        // Cargar datos desde archivos si existen
+        if (this.archivocategorias.existe()) {
+            this.listacategorias.cargarCategorias(this.archivocategorias.cargar());
+        }
+        if (this.archivoinsumos.existe()) {
+            this.listainsumo.cargarInsumo(this.archivoinsumos.cargar());
+        }
+        
+        // Inicializar modelo de lista
+        modelocategoria = new DefaultListModel<>();
+        modelocategoria = this.listacategorias.generarModeloCategorias();
+    }
+
+    private void configurarVentana() {
+        setBounds(0, 0, 450, 400); // Tamaño aumentado para mejor visualización
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        panelFormulario = new JPanel();
+        panelFormulario.setLayout(null);
+        getContentPane().add(panelFormulario, BorderLayout.CENTER);
+        
+        crearComponentesUI();
+    }
+
+    private void crearComponentesUI() {
+        // Componentes para ID
+        JLabel labelId = new JLabel("ID:");
+        labelId.setBounds(20, 20, 40, 20);
+        Tid = new JTextField();
+        Tid.setEditable(false);
+        Tid.setBounds(70, 20, 200, 25);
+        panelFormulario.add(labelId);
+        panelFormulario.add(Tid);
+
+        // Componentes para Insumo
+        JLabel labelInsumo = new JLabel("Insumo:");
+        labelInsumo.setBounds(20, 50, 60, 20);
+        Tinsumo = new JTextField();
+        Tinsumo.setEditable(false);
+        Tinsumo.setBounds(70, 50, 200, 25);
+        panelFormulario.add(labelInsumo);
+        panelFormulario.add(Tinsumo);
+
+        // Lista de categorías
+        JScrollPane scrollPane_jlist = new JScrollPane();
+        scrollPane_jlist.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane_jlist.setBounds(70, 80, 200, 80);
+        
+        ListaCategoria = new JList<>();
+        scrollPane_jlist.setViewportView(ListaCategoria);
+        ListaCategoria.setModel(this.modelocategoria);
+        ListaCategoria.setEnabled(false);
+        panelFormulario.add(scrollPane_jlist);
+
+        // Botones
+        Bagregar = new JButton("Agregar");
+        Bagregar.setBounds(20, 170, 100, 30);
+        Bagregar.addActionListener(this);
+        panelFormulario.add(Bagregar);
+
+        Beliminar = new JButton("Eliminar");
+        Beliminar.setBounds(130, 170, 100, 30);
+        Beliminar.addActionListener(this);
+        panelFormulario.add(Beliminar);
+
+        Bsalir = new JButton("Salir");
+        Bsalir.setBounds(240, 170, 100, 30);
+        Bsalir.addActionListener(this);
+        panelFormulario.add(Bsalir);
+        
+        // Área de productos
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(20, 210, 400, 140);
+        
+        areaProductos = new JTextArea();
+        areaProductos.setEditable(false);
+        scrollPane.setViewportView(areaProductos);
+        panelFormulario.add(scrollPane);
+    }
+
+    private void cargarDatosIniciales() {
+        if (this.listainsumo != null && this.listainsumo.toString() != null) {
+            this.areaProductos.setText(this.listainsumo.toString());
+        }
+    }
+
+    public void Volveralinicio() {
+        this.Bagregar.setText("Agregar");
+        this.Bsalir.setText("Salir");
+        this.Beliminar.setEnabled(true);
+        this.Tid.setEditable(false);
+        this.Tinsumo.setEditable(false);
+        this.ListaCategoria.setEnabled(false);
+        this.Tid.setText("");
+        this.Tinsumo.setText("");
+        
+        if (modelocategoria.size() > 0) {
+            this.ListaCategoria.setSelectedIndex(0);
+        }
+    }
+
+    public void Altas() {
+        if (this.Bagregar.getText().equals("Agregar")) {
+            if (modelocategoria.size() > 0) {
+                this.ListaCategoria.setSelectedIndex(0);
+            }
+            this.Bagregar.setText("Salvar");
+            this.Bsalir.setText("Cancelar");
+            this.Beliminar.setEnabled(false);
+            this.Tid.setEditable(true);
+            this.Tinsumo.setEditable(true);
+            this.ListaCategoria.setEnabled(true);
+            this.ListaCategoria.setFocusable(true);
+        } else {
+            if (esdatoscompletos()) {
+                String id = this.Tid.getText().trim();
+                String insumo = this.Tinsumo.getText().trim();
+                String idcategoria = this.modelocategoria.get(this.ListaCategoria.getSelectedIndex()).getIdcategoria();
+                
+                Insumo nodo = new Insumo(id, insumo, idcategoria);
+                
+                if (!this.listainsumo.agregarInsumo(nodo)) {
+                    String mensaje = "Lo siento, el ID " + id + " ya existe y está asignado a " + 
+                                   this.listainsumo.buscarInsumo(id);
+                    JOptionPane.showMessageDialog(this, mensaje);
+                } else {
+                    this.archivoinsumos.guardar(this.listainsumo.toArchivo());
+                    this.areaProductos.setText(this.listainsumo.toString());
+                }
+            }
+            this.Volveralinicio();
+        }
+    }
+
+    public void Eliminar() {
+        Object[] opciones = this.listainsumo.idInsumos();
+        
+        if (opciones != null && opciones.length > 0) {
+            String id = (String) JOptionPane.showInputDialog(
+                null, 
+                "Seleccione una opción:", 
+                "Eliminación de Insumos", 
+                JOptionPane.PLAIN_MESSAGE, 
+                null, 
+                opciones, 
+                opciones[0]);
+                
+            if (id != null && !id.isEmpty()) {
+                if (!this.listainsumo.eliminarInsumoPorId(id)) {
+                    JOptionPane.showMessageDialog(this, "No existe este id");
+                } else {
+                    this.archivoinsumos.guardar(this.listainsumo.toArchivo());
+                    this.areaProductos.setText(this.listainsumo.toString());
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No hay insumos para eliminar");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == this.Bagregar) {
+            this.Altas();
+        } else if (e.getSource() == this.Beliminar) {
+            this.Eliminar();
+        } else if (e.getSource() == Bsalir) {
+            if (this.Bsalir.getText().equals("Cancelar")) {
+                this.Volveralinicio();
+            } else {
+                this.dispose();
+            }
+        }
+    }
+
+    public Boolean esdatoscompletos() {
+        if (this.ListaCategoria.getSelectedIndex() < 0) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una categoría");
+            return false;
+        }
+        
+        String id = this.Tid.getText().trim();
+        String insumo = this.Tinsumo.getText().trim();
+        
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El ID no puede estar vacío");
+            return false;
+        }
+        
+        if (insumo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre del insumo no puede estar vacío");
+            return false;
+        }
+        
+        return true;
+    }
+
+    public static void main(String[] args) {
+        new Practica01_b();
+    }
+}
