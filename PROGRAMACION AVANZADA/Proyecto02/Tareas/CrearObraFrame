@@ -1,0 +1,131 @@
+package Actividades;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
+import Libreria.Archivotxt;
+import Libreria.Librerias;
+
+public class CrearObraFrame extends JInternalFrame implements ActionListener {
+
+    private Archivotxt archivoObras;
+    private Librerias libreria;
+    private JTextField Tnombre, Tdescripcion;
+    private JButton Bguardar, Bcancelar;
+    private JLabel Lnombre, Ldescripcion;
+    private String idObra;
+    private JFrame padre;
+    private JMenuBar barra;
+
+    public CrearObraFrame(JFrame padre) {
+        super("Crear Nueva Obra", true, true, true, true);
+        this.padre = padre;
+        this.libreria = new Librerias();
+        this.archivoObras = new Archivotxt("Obras");
+        
+        // Generar ID automático (no visible)
+        this.idObra = generarIdObra();
+        
+        inicializarComponentes();
+        configurarInterfaz();
+        
+        if (this.padre != null) {
+            this.barra = this.padre.getJMenuBar();
+            this.barra = menuspadre(this.barra, false);
+        }
+    }
+
+    private String generarIdObra() {
+        // Implementación para generar un ID único
+        // Puede ser un timestamp o un contador incremental
+        return "OBRA-" + System.currentTimeMillis();
+    }
+
+    private void inicializarComponentes() {
+        // No necesitamos cargar datos existentes para creación
+    }
+
+    private void configurarInterfaz() {
+        setSize(400, 300);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        
+        JPanel panelPrincipal = new JPanel();
+        panelPrincipal.setLayout(null);
+        getContentPane().add(panelPrincipal, BorderLayout.CENTER);
+        
+        // Etiqueta y campo para nombre de la obra
+        Lnombre = new JLabel("Nombre de la obra:");
+        Lnombre.setBounds(20, 20, 150, 20);
+        panelPrincipal.add(Lnombre);
+        
+        Tnombre = new JTextField();
+        Tnombre.setBounds(180, 20, 180, 25);
+        panelPrincipal.add(Tnombre);
+        
+        // Etiqueta y campo para descripción
+        Ldescripcion = new JLabel("Descripción:");
+        Ldescripcion.setBounds(20, 60, 150, 20);
+        panelPrincipal.add(Ldescripcion);
+        
+        Tdescripcion = new JTextField();
+        Tdescripcion.setBounds(20, 90, 340, 120);
+        panelPrincipal.add(Tdescripcion);
+        
+        // Botones
+        Bguardar = new JButton("Guardar");
+        Bguardar.setBounds(100, 230, 100, 30);
+        Bguardar.addActionListener(this);
+        panelPrincipal.add(Bguardar);
+        
+        Bcancelar = new JButton("Cancelar");
+        Bcancelar.setBounds(220, 230, 100, 30);
+        Bcancelar.addActionListener(this);
+        panelPrincipal.add(Bcancelar);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == Bguardar) {
+            guardarObra();
+        } else if (e.getSource() == Bcancelar) {
+            cancelar();
+        }
+    }
+
+    private void guardarObra() {
+        String nombre = Tnombre.getText().trim();
+        String descripcion = Tdescripcion.getText().trim();
+        
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre de la obra no puede estar vacío");
+            return;
+        }
+        
+        // Formato: ID|NOMBRE|DESCRIPCION
+        String registro = idObra + "|" + nombre + "|" + descripcion;
+        
+        // Guardar en archivo
+        archivoObras.guardarLinea(registro);
+        
+        JOptionPane.showMessageDialog(this, "Obra guardada exitosamente");
+        dispose();
+    }
+
+    private void cancelar() {
+        if (this.padre != null) {
+            this.barra = menuspadre(this.barra, true);
+        }
+        dispose();
+    }
+    
+    public JMenuBar menuspadre(JMenuBar barra, boolean accion) {
+        if (barra != null) {
+            int cantmenus = barra.getMenuCount();
+            for(int pos = 0; pos < cantmenus; pos++) {
+                barra.getMenu(pos).setEnabled(accion);
+            }
+        }
+        return barra;
+    }
+}
