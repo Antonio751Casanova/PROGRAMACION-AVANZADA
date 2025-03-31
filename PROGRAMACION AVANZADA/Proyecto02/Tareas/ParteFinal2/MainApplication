@@ -1,0 +1,560 @@
+package Partefinal2;
+
+
+import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.ArrayList;
+
+public class MainApplication extends JFrame {
+    private JDesktopPane desktopPane;
+    private JMenuBar menuBar;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
+    private String storageType = "txt"; // Por defecto usa TXT
+
+    public MainApplication() {
+        super("Gestión de Construcción - Actividad 5");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        
+        // Configurar CardLayout
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        
+        // Configurar DesktopPane
+        desktopPane = new JDesktopPane();
+        cardPanel.add(desktopPane, "desktop");
+        
+        // Configurar menú
+        createMenuBar();
+        
+        add(cardPanel);
+        setVisible(true);
+    }
+    
+    private void createMenuBar() {
+        menuBar = new JMenuBar();
+        
+        JMenu fileMenu = new JMenu("Archivo");
+        JMenuItem exitItem = new JMenuItem("Salir");
+        exitItem.addActionListener(e -> System.exit(0));
+        fileMenu.add(exitItem);
+        
+        JMenu dataMenu = new JMenu("Datos");
+        JMenuItem categoriasItem = new JMenuItem("Categorías");
+        JMenuItem insumosItem = new JMenuItem("Insumos");
+        JMenuItem obrasItem = new JMenuItem("Obras");
+        
+        categoriasItem.addActionListener(e -> openInternalFrame(new CategoriasInternalFrame(storageType)));
+        insumosItem.addActionListener(e -> openInternalFrame(new InsumosInternalFrame(storageType)));
+        obrasItem.addActionListener(e -> openInternalFrame(new ObrasInternalFrame(storageType)));
+        
+        dataMenu.add(categoriasItem);
+        dataMenu.add(insumosItem);
+        dataMenu.add(obrasItem);
+        
+        JMenu configMenu = new JMenu("Configuración");
+        JMenuItem storageItem = new JMenuItem("Tipo de Almacenamiento");
+        
+        storageItem.addActionListener(e -> showStorageConfigDialog());
+        configMenu.add(storageItem);
+        
+        menuBar.add(fileMenu);
+        menuBar.add(dataMenu);
+        menuBar.add(configMenu);
+        
+        setJMenuBar(menuBar);
+    }
+    
+    private void showStorageConfigDialog() {
+        JDialog dialog = new JDialog(this, "Configuración de Almacenamiento", true);
+        dialog.setLayout(new GridLayout(3, 1));
+        
+        JLabel titleLabel = new JLabel("Seleccione el tipo de almacenamiento:", JLabel.CENTER);
+        
+        ButtonGroup group = new ButtonGroup();
+        JRadioButton txtRadio = new JRadioButton("Archivos de Texto (TXT)", storageType.equals("txt"));
+        JRadioButton xmlRadio = new JRadioButton("Archivos XML", storageType.equals("xml"));
+        group.add(txtRadio);
+        group.add(xmlRadio);
+        
+        JPanel radioPanel = new JPanel(new FlowLayout());
+        radioPanel.add(txtRadio);
+        radioPanel.add(xmlRadio);
+        
+        JButton saveBtn = new JButton("Guardar");
+        saveBtn.addActionListener(e -> {
+            if (txtRadio.isSelected()) {
+                storageType = "txt";
+            } else {
+                storageType = "xml";
+            }
+            dialog.dispose();
+        });
+        
+        dialog.add(titleLabel);
+        dialog.add(radioPanel);
+        dialog.add(saveBtn);
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void openInternalFrame(JInternalFrame internalFrame) {
+        menuBar.setEnabled(false);
+        
+        internalFrame.setClosable(true);
+        internalFrame.setMaximizable(true);
+        internalFrame.setResizable(true);
+        
+        internalFrame.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosed(InternalFrameEvent e) {
+                menuBar.setEnabled(true);
+            }
+        });
+        
+        desktopPane.add(internalFrame);
+        internalFrame.setVisible(true);
+        internalFrame.toFront();
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new MainApplication());
+    }
+}
+
+class CategoriasInternalFrame extends JInternalFrame {
+    private ArrayList<String> categorias;
+    private JList<String> listaCategorias;
+    private DefaultListModel<String> listModel;
+    private String storageType;
+    
+    public CategoriasInternalFrame(String storageType) {
+        super("Gestión de Categorías", true, true, true, true);
+        setSize(400, 300);
+        this.storageType = storageType;
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        categorias.forEach(listModel::addElement);
+        
+        listaCategorias = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(listaCategorias);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        categorias = new ArrayList<>();
+        
+        if (storageType.equals("txt")) {
+            cargarDesdeTXT();
+        } else {
+            cargarDesdeXML();
+        }
+    }
+    
+    private void cargarDesdeTXT() {
+        File file = new File("categorias.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    categorias.add(line);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar categorías desde TXT", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void cargarDesdeXML() {
+        File file = new File("categorias.xml");
+        if (file.exists()) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(file);
+                
+                NodeList nodeList = doc.getElementsByTagName("categoria");
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element element = (Element) node;
+                        categorias.add(element.getTextContent());
+                    }
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar categorías desde XML", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        if (storageType.equals("txt")) {
+            guardarEnTXT();
+        } else {
+            guardarEnXML();
+        }
+    }
+    
+    private void guardarEnTXT() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("categorias.txt"))) {
+            for (String categoria : categorias) {
+                writer.println(categoria);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar categorías en TXT", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void guardarEnXML() {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+            
+            Element rootElement = doc.createElement("categorias");
+            doc.appendChild(rootElement);
+            
+            for (String categoria : categorias) {
+                Element categoriaElement = doc.createElement("categoria");
+                categoriaElement.appendChild(doc.createTextNode(categoria));
+                rootElement.appendChild(categoriaElement);
+            }
+            
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("categorias.xml"));
+            
+            transformer.transform(source, result);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar categorías en XML", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // Resto de métodos (mostrarDialogoAgregar, mostrarDialogoModificar, mostrarConfirmacionEliminar)
+    // son similares a los de la actividad anterior
+}
+
+class InsumosInternalFrame extends JInternalFrame {
+    private ArrayList<String> insumos;
+    private JList<String> listaInsumos;
+    private DefaultListModel<String> listModel;
+    private String storageType;
+    
+    public InsumosInternalFrame(String storageType) {
+        super("Gestión de Insumos", true, true, true, true);
+        setSize(400, 300);
+        this.storageType = storageType;
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        insumos.forEach(listModel::addElement);
+        
+        listaInsumos = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(listaInsumos);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        insumos = new ArrayList<>();
+        
+        if (storageType.equals("txt")) {
+            cargarDesdeTXT();
+        } else {
+            cargarDesdeXML();
+        }
+    }
+    
+    private void cargarDesdeTXT() {
+        File file = new File("insumos.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    insumos.add(line);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar insumos desde TXT", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void cargarDesdeXML() {
+        File file = new File("insumos.xml");
+        if (file.exists()) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(file);
+                
+                NodeList nodeList = doc.getElementsByTagName("insumo");
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element element = (Element) node;
+                        insumos.add(element.getTextContent());
+                    }
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar insumos desde XML", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        if (storageType.equals("txt")) {
+            guardarEnTXT();
+        } else {
+            guardarEnXML();
+        }
+    }
+    
+    private void guardarEnTXT() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("insumos.txt"))) {
+            for (String insumo : insumos) {
+                writer.println(insumo);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar insumos en TXT", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void guardarEnXML() {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+            
+            Element rootElement = doc.createElement("insumos");
+            doc.appendChild(rootElement);
+            
+            for (String insumo : insumos) {
+                Element insumoElement = doc.createElement("insumo");
+                insumoElement.appendChild(doc.createTextNode(insumo));
+                rootElement.appendChild(insumoElement);
+            }
+            
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("insumos.xml"));
+            
+            transformer.transform(source, result);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar insumos en XML", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // Resto de métodos similares a CategoriasInternalFrame
+}
+
+class ObrasInternalFrame extends JInternalFrame {
+    private ArrayList<Obra> obras;
+    private JList<Obra> listaObras;
+    private DefaultListModel<Obra> listModel;
+    private String storageType;
+    
+    public ObrasInternalFrame(String storageType) {
+        super("Gestión de Obras", true, true, true, true);
+        setSize(600, 400);
+        this.storageType = storageType;
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        obras.forEach(listModel::addElement);
+        
+        listaObras = new JList<>(listModel);
+        listaObras.setCellRenderer(new ObraCellRenderer());
+        JScrollPane scrollPane = new JScrollPane(listaObras);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        obras = new ArrayList<>();
+        
+        if (storageType.equals("txt")) {
+            cargarDesdeTXT();
+        } else {
+            cargarDesdeXML();
+        }
+    }
+    
+    private void cargarDesdeTXT() {
+        File file = new File("obras.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\\|");
+                    if (parts.length == 4) {
+                        obras.add(new Obra(parts[0], parts[1], parts[2], parts[3]));
+                    }
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar obras desde TXT", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void cargarDesdeXML() {
+        File file = new File("obras.xml");
+        if (file.exists()) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(file);
+                
+                NodeList nodeList = doc.getElementsByTagName("obra");
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element element = (Element) node;
+                        
+                        String nombre = element.getElementsByTagName("nombre").item(0).getTextContent();
+                        String descripcion = element.getElementsByTagName("descripcion").item(0).getTextContent();
+                        String fechaInicio = element.getElementsByTagName("fechaInicio").item(0).getTextContent();
+                        String fechaFin = element.getElementsByTagName("fechaFin").item(0).getTextContent();
+                        
+                        obras.add(new Obra(nombre, descripcion, fechaInicio, fechaFin));
+                    }
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar obras desde XML", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        if (storageType.equals("txt")) {
+            guardarEnTXT();
+        } else {
+            guardarEnXML();
+        }
+    }
+    
+    private void guardarEnTXT() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("obras.txt"))) {
+            for (Obra obra : obras) {
+                writer.println(obra.getNombre() + "|" + obra.getDescripcion() + "|" + 
+                             obra.getFechaInicio() + "|" + obra.getFechaFin());
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar obras en TXT", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void guardarEnXML() {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+            
+            Element rootElement = doc.createElement("obras");
+            doc.appendChild(rootElement);
+            
+            for (Obra obra : obras) {
+                Element obraElement = doc.createElement("obra");
+                
+                Element nombreElement = doc.createElement("nombre");
+                nombreElement.appendChild(doc.createTextNode(obra.getNombre()));
+                obraElement.appendChild(nombreElement);
+                
+                Element descElement = doc.createElement("descripcion");
+                descElement.appendChild(doc.createTextNode(obra.getDescripcion()));
+                obraElement.appendChild(descElement);
+                
+                Element inicioElement = doc.createElement("fechaInicio");
+                inicioElement.appendChild(doc.createTextNode(obra.getFechaInicio()));
+                obraElement.appendChild(inicioElement);
+                
+                Element finElement = doc.createElement("fechaFin");
+                finElement.appendChild(doc.createTextNode(obra.getFechaFin()));
+                obraElement.appendChild(finElement);
+                
+                rootElement.appendChild(obraElement);
+            }
+            
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("obras.xml"));
+            
+            transformer.transform(source, result);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar obras en XML", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // Resto de métodos similares a los anteriores
+}
