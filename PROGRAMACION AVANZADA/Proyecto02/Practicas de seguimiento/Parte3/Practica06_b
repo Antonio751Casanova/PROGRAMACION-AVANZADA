@@ -1,0 +1,72 @@
+package Parte3;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class Practica06_b extends JFrame {
+    private JTextField txtID, txtInsumo, txtCategoria;
+    private DefaultListModel<String> modeloLista;
+    private JPanel panel4;
+    private JButton btnAgregar_1;
+    private JButton btnEliminar_1;
+    private JButton btnSalir_1;
+    private JScrollPane scrollPane;
+    private JTable table;
+    
+    public Practica06_b() {
+        setTitle("Gestión de Insumos");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        getContentPane().setLayout(new BorderLayout());
+        
+        JPanel panelNorte = new JPanel(new GridLayout(2, 1));
+        JPanel panel1 = new JPanel(new FlowLayout());
+        panel1.add(new JLabel("ID:"));
+        txtID = new JTextField(5);
+        panel1.add(txtID);
+        panel1.add(new JLabel("Insumo:"));
+        txtInsumo = new JTextField(20);
+        panel1.add(txtInsumo);
+        panelNorte.add(panel1);
+        
+        JPanel panel2 = new JPanel(new FlowLayout());
+        panel2.add(new JLabel("Categoría:"));
+        txtCategoria = new JTextField(20);
+        panel2.add(txtCategoria);
+        panelNorte.add(panel2);
+        
+        getContentPane().add(panelNorte, BorderLayout.NORTH);
+        
+        modeloLista = new DefaultListModel<>();
+        
+        JPanel panel3 = new JPanel();
+        
+        getContentPane().add(panel3, BorderLayout.SOUTH);
+        
+        scrollPane = new JScrollPane();
+        panel3.add(scrollPane);
+        
+        table = new JTable();
+        panel3.add(table);
+        
+        panel4 = new JPanel();
+        getContentPane().add(panel4, BorderLayout.WEST);
+        
+        btnAgregar_1 = new JButton("Agregar");
+        panel4.add(btnAgregar_1);
+        
+        btnEliminar_1 = new JButton("Eliminar");
+        panel4.add(btnEliminar_1);
+        
+        btnSalir_1 = new JButton("Salir");
+        panel4.add(btnSalir_1);
+        
+        setVisible(true);
+    }
+    
+    public static void main(String[] args) {
+        new Practica06_b();
+    }
+}
+
