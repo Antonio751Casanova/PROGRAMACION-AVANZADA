@@ -1,0 +1,72 @@
+package Parte3;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class Practica06_a extends JFrame {
+
+    public Practica06_a() {
+        // Configuración del JFrame
+        setTitle("Mi Aplicación");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 300);
+        setLocationRelativeTo(null);
+        
+        // Crear el panel principal
+        JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayout(3, 1));
+        
+        // Agregar componentes a panel1
+        JLabel labelId = new JLabel("ID:");
+        JTextField textId = new JTextField();
+        JLabel labelInsumo = new JLabel("Insumo:");
+        JTextField textInsumo = new JTextField();
+        
+        panel1.add(labelId);
+        panel1.add(textId);
+        panel1.add(labelInsumo);
+        panel1.add(textInsumo);
+
+        // Crear panel2 (esto podría incluir categorías)
+        JPanel panel2 = new JPanel();
+        JLabel labelCategoria = new JLabel("Categoría:");
+        
+        // Agregar el label al panel2
+        panel2.add(labelCategoria);
+
+        // Crear panel3 y un JScrollPane
+        JPanel panel3 = new JPanel();
+        panel3.setLayout(new BoxLayout(panel3, BoxLayout.Y_AXIS));
+        
+        // Ejemplo de agregar elementos al panel3
+        JList<String> itemList = new JList<>(new String[]{"Item 1", "Item 2", "Item 3"});
+        JScrollPane scrollPane = new JScrollPane(itemList);
+        
+        panel3.add(scrollPane);
+
+        // Crear panel4 para los botones
+        JPanel panel4 = new JPanel();
+        JButton btnAgregar = new JButton("Agregar");
+        JButton btnEliminar = new JButton("Eliminar");
+        JButton btnSalir = new JButton("Salir");
+        
+        panel4.add(btnAgregar);
+        panel4.add(btnEliminar);
+        panel4.add(btnSalir);
+
+        // Agregar todo al panel de contenido
+        Container container = getContentPane();
+        container.setLayout(new BorderLayout());
+        container.add(panel1, BorderLayout.NORTH);
+        container.add(panel2, BorderLayout.CENTER);
+        container.add(panel3, BorderLayout.EAST); // panel3 en la parte derecha
+        container.add(panel4, BorderLayout.SOUTH);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Practica06_a ventana = new Practica06_a();
+            ventana.setVisible(true);
+        });
+    }
+}
