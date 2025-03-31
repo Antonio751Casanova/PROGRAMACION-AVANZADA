@@ -1,0 +1,81 @@
+package Parte3;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class Practica06_d extends JFrame {
+    private JTextField txtID, txtInsumo, txtCategoria;
+    private DefaultListModel<String> modeloLista;
+    private JPanel panel4;
+    private JButton btnAgregar_1;
+    private JButton btnEliminar_1;
+    private JButton btnSalir_1;
+    private JScrollPane scrollPane;
+    
+    public Practica06_d() {
+        setTitle("Gestión de Insumos");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        gridBagLayout.columnWidths = new int[]{486, 0};
+        gridBagLayout.rowHeights = new int[]{121, 121, 121, 0};
+        gridBagLayout.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+        gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+        getContentPane().setLayout(gridBagLayout);
+        
+        JPanel panelNorte = new JPanel(new GridLayout(2, 1));
+        JPanel panel1 = new JPanel(new FlowLayout());
+        panel1.add(new JLabel("ID:"));
+        txtID = new JTextField(5);
+        panel1.add(txtID);
+        panel1.add(new JLabel("Insumo:"));
+        txtInsumo = new JTextField(20);
+        panel1.add(txtInsumo);
+        panelNorte.add(panel1);
+        
+        JPanel panel2 = new JPanel(new FlowLayout());
+        panel2.add(new JLabel("Categoría:"));
+        txtCategoria = new JTextField(20);
+        panel2.add(txtCategoria);
+        panelNorte.add(panel2);
+        
+        GridBagConstraints gbc_panelNorte = new GridBagConstraints();
+        gbc_panelNorte.fill = GridBagConstraints.BOTH;
+        gbc_panelNorte.insets = new Insets(0, 0, 5, 0);
+        gbc_panelNorte.gridx = 0;
+        gbc_panelNorte.gridy = 0;
+        getContentPane().add(panelNorte, gbc_panelNorte);
+        
+        JPanel panel3 = new JPanel();
+        
+        GridBagConstraints gbc_panel3 = new GridBagConstraints();
+        gbc_panel3.fill = GridBagConstraints.BOTH;
+        gbc_panel3.gridx = 0;
+        gbc_panel3.gridy = 2;
+        getContentPane().add(panel3, gbc_panel3);
+        
+        scrollPane = new JScrollPane();
+        panel3.add(scrollPane);
+        
+        panel4 = new JPanel();
+        panel3.add(panel4);
+        
+        btnAgregar_1 = new JButton("Agregar");
+        panel4.add(btnAgregar_1);
+        
+        btnEliminar_1 = new JButton("Eliminar");
+        panel4.add(btnEliminar_1);
+        
+        btnSalir_1 = new JButton("Salir");
+        panel4.add(btnSalir_1);
+        
+        modeloLista = new DefaultListModel<>();
+        
+        setVisible(true);
+    }
+    
+    public static void main(String[] args) {
+        new Practica06_d();
+    }
+}
