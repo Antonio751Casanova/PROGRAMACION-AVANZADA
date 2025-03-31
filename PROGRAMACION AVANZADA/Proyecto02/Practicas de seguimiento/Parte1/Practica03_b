@@ -1,0 +1,328 @@
+package Parte1;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JList;
+import javax.swing.JMenuBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+
+import Libreria.Archivotxt;
+import Libreria.Librerias;
+import Modelo.Categoria;
+import Modelo.Insumo;
+import Modelo.ListaCategorias;
+import Modelo.ListaInsumos;
+
+public class Practica03_b extends JInternalFrame implements ActionListener {
+
+    // Objetos para manejo de datos
+    private ListaInsumos listainsumo;
+    private ListaCategorias listacategorias;
+    private Archivotxt archivocategorias;
+    private Archivotxt archivoinsumos;
+    private Librerias libreria;
+
+    // Componentes de la interfaz
+    private JList<Categoria> ListaCategoria;
+    private JTextField Tid, Tinsumo;
+    private JButton Bagregar, Beliminar, Bsalir;
+    private JPanel panelFormulario;
+    private JTable TareaProductos;
+    private JLabel Limagen;
+    private DefaultListModel<Categoria> modelocategoria;
+    private DefaultTableModel modeloinsumos;
+    private JFrame padre;
+    private JMenuBar barra;
+
+    public Practica03_b(JFrame padre) {
+        super("Administración de Productos", true, true, true, true);
+        this.padre = padre;
+        this.libreria = new Librerias();
+        
+        inicializarComponentes();
+        configurarInterfaz();
+        
+        // Configurar menús
+        if (this.padre != null) {
+            this.barra = this.padre.getJMenuBar();
+            this.barra = this.libreria.menuspadre(this.barra, false);
+        }
+    }
+
+    private void inicializarComponentes() {
+        this.archivocategorias = new Archivotxt("Categoria");
+        this.archivoinsumos = new Archivotxt("Insumos");
+        this.listacategorias = new ListaCategorias();
+        this.listainsumo = new ListaInsumos();
+
+        // Cargar datos si los archivos existen
+        if (this.archivocategorias.existe()) {
+            this.listacategorias.cargarCategorias(this.archivocategorias.cargar());
+        }
+        if (this.archivoinsumos.existe()) {
+            this.listainsumo.cargarInsumo(this.archivoinsumos.cargar());
+        }
+
+        // Inicializar modelos
+        modelocategoria = this.listacategorias.generarModeloCategorias();
+        modeloinsumos = this.listainsumo.getmodelo(this.listacategorias);
+    }
+
+    private void configurarInterfaz() {
+        setSize(600, 450); // Tamaño aumentado para mejor visualización
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        
+        panelFormulario = new JPanel();
+        panelFormulario.setLayout(null);
+        getContentPane().add(panelFormulario, BorderLayout.CENTER);
+        
+        crearComponentesUI();
+        actualizartabla();
+        actualizarimagen();
+    }
+
+    private void crearComponentesUI() {
+        // Componentes para ID
+        JLabel labelId = new JLabel("ID:");
+        labelId.setBounds(20, 20, 40, 20);
+        Tid = new JTextField();
+        Tid.setEditable(false);
+        Tid.setBounds(70, 20, 200, 25);
+        panelFormulario.add(labelId);
+        panelFormulario.add(Tid);
+
+        // Componentes para Insumo
+        JLabel labelInsumo = new JLabel("Insumo:");
+        labelInsumo.setBounds(20, 50, 60, 20);
+        Tinsumo = new JTextField();
+        Tinsumo.setEditable(false);
+        Tinsumo.setBounds(70, 50, 200, 25);
+        panelFormulario.add(labelInsumo);
+        panelFormulario.add(Tinsumo);
+
+        // Lista de categorías
+        JScrollPane scrollPane_jlist = new JScrollPane();
+        scrollPane_jlist.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane_jlist.setBounds(70, 80, 200, 100);
+        
+        ListaCategoria = new JList<>();
+        scrollPane_jlist.setViewportView(ListaCategoria);
+        ListaCategoria.setModel(this.modelocategoria);
+        ListaCategoria.setEnabled(false);
+        panelFormulario.add(scrollPane_jlist);
+
+        // Botones
+        Bagregar = new JButton("Agregar");
+        Bagregar.setBounds(20, 190, 100, 30);
+        Bagregar.addActionListener(this);
+        panelFormulario.add(Bagregar);
+
+        Beliminar = new JButton("Eliminar");
+        Beliminar.setBounds(130, 190, 100, 30);
+        Beliminar.addActionListener(this);
+        panelFormulario.add(Beliminar);
+
+        Bsalir = new JButton("Salir");
+        Bsalir.setBounds(240, 190, 100, 30);
+        Bsalir.addActionListener(this);
+        panelFormulario.add(Bsalir);
+        
+        // Tabla de productos
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(20, 230, 350, 150);
+        
+        TareaProductos = new JTable();
+        TareaProductos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        TareaProductos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    actualizarimagen();
+                }
+            }
+        });
+        scrollPane.setViewportView(TareaProductos);
+        panelFormulario.add(scrollPane);
+
+        // Etiqueta para imagen
+        Limagen = new JLabel("Imagen");
+        Limagen.setBounds(380, 20, 180, 180);
+        panelFormulario.add(Limagen);
+    }
+
+    public void actualizarimagen() {
+        int fila = TareaProductos.getSelectedRow();
+        String nombreArchivo;
+        String directorioTrabajo = System.getProperty("user.dir");
+        
+        if (fila >= 0) {
+            nombreArchivo = ((String) TareaProductos.getValueAt(fila, 0)) + ".png";
+        } else {
+            nombreArchivo = "000.png";
+        }
+        
+        File fichero = new File(directorioTrabajo + File.separator + "Imagenes" + File.separator + nombreArchivo);
+        
+        // Verificar si existe la imagen, sino usar la por defecto
+        if (!fichero.exists()) {
+            fichero = new File(directorioTrabajo + File.separator + "Imagenes" + File.separator + "000.png");
+        }
+        
+        this.Limagen.setIcon(libreria.EtiquetaImagen(
+            fichero.getPath(), 
+            this.Limagen.getWidth(), 
+            this.Limagen.getHeight()
+        ));
+    }
+    
+    public void actualizartabla() {
+        this.TareaProductos.setModel(this.modeloinsumos);
+        if (this.modeloinsumos.getColumnCount() >= 3) {
+            this.TareaProductos.getColumnModel().getColumn(0).setPreferredWidth(50);
+            this.TareaProductos.getColumnModel().getColumn(1).setPreferredWidth(200);
+            this.TareaProductos.getColumnModel().getColumn(2).setPreferredWidth(50);
+        }
+    }
+
+    public void Volveralinicio() {
+        this.Bagregar.setText("Agregar");
+        this.Bsalir.setText("Salir");
+        this.Beliminar.setEnabled(true);
+        this.Tid.setEditable(false);
+        this.Tinsumo.setEditable(false);
+        this.ListaCategoria.setEnabled(false);
+        this.Tid.setText("");
+        this.Tinsumo.setText("");
+        
+        if (modelocategoria.size() > 0) {
+            this.ListaCategoria.setSelectedIndex(0);
+        }
+    }
+
+    public void Altas() {
+        if (this.Bagregar.getText().equals("Agregar")) {
+            if (modelocategoria.size() > 0) {
+                this.ListaCategoria.setSelectedIndex(0);
+            }
+            this.Bagregar.setText("Salvar");
+            this.Bsalir.setText("Cancelar");
+            this.Beliminar.setEnabled(false);
+            this.Tid.setEditable(true);
+            this.Tinsumo.setEditable(true);
+            this.ListaCategoria.setEnabled(true);
+        } else {
+            if (esdatoscompletos()) {
+                String id = this.Tid.getText().trim();
+                String insumo = this.Tinsumo.getText().trim();
+                String idcategoria = this.modelocategoria.get(this.ListaCategoria.getSelectedIndex()).getIdcategoria();
+                
+                Insumo nodo = new Insumo(id, insumo, idcategoria);
+                
+                if (!this.listainsumo.agregarInsumo(nodo)) {
+                    String mensaje = "Lo siento, el ID " + id + " ya existe, lo tiene asignado " + 
+                                   this.listainsumo.buscarInsumo(id);
+                    JOptionPane.showMessageDialog(this, mensaje);
+                } else {
+                    this.archivoinsumos.guardar(this.listainsumo.toArchivo());
+                    this.actualizartabla();
+                }
+            }
+            this.Volveralinicio();
+        }
+    }
+
+    public void Eliminar() {
+        Object[] opciones = this.listainsumo.idInsumos();
+        
+        if (opciones != null && opciones.length > 0) {
+            String id = (String) JOptionPane.showInputDialog(
+                this, 
+                "Seleccione una opción:", 
+                "Eliminación de Insumos", 
+                JOptionPane.PLAIN_MESSAGE, 
+                null, 
+                opciones, 
+                null);
+                
+            if (id != null && !id.isEmpty()) {
+                if (!this.listainsumo.eliminarInsumoPorId(id)) {
+                    JOptionPane.showMessageDialog(this, "No existe este id");
+                } else {
+                    this.archivoinsumos.guardar(this.listainsumo.toArchivo());
+                    this.actualizartabla();
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No hay insumos para eliminar");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == this.Bagregar) {
+            this.Altas();
+        } else if (e.getSource() == this.Beliminar) {
+            this.Eliminar();
+        } else if (e.getSource() == Bsalir) {
+            if (this.Bsalir.getText().equals("Cancelar")) {
+                this.Volveralinicio();
+            } else {
+                if (this.padre != null) {
+                    this.barra = this.libreria.menuspadre(this.barra, true);
+                }
+                this.dispose();
+            }
+        }
+    }
+    
+    public void menuspadre(JMenuBar barra, boolean accion) {
+        JMenuBar barraaux;
+        barraaux = barra;
+        int cantmenus = barraaux.getMenuCount();
+        for(int pos = 0; pos < cantmenus; pos++) {
+            barraaux.getMenu(pos).setEnabled(accion);
+        
+        return barraaux;
+        
+        }
+    }
+    
+    
+
+    public Boolean esdatoscompletos() {
+        if (this.ListaCategoria.getSelectedIndex() < 0) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una categoría");
+            return false;
+        }
+        
+        String id = this.Tid.getText().trim();
+        String insumo = this.Tinsumo.getText().trim();
+        
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El ID no puede estar vacío");
+            return false;
+        }
+        
+        if (insumo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre del insumo no puede estar vacío");
+            return false;
+        }
+        
+        return true;
+    }
+}
