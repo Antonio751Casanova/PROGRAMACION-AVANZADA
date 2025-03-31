@@ -1,0 +1,793 @@
+package Partefinal;
+
+import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.ArrayList;
+
+public class MainApplication extends JFrame {
+    private JDesktopPane desktopPane;
+    private JMenuBar menuBar;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
+
+    public MainApplication() {
+        super("Gestión de Construcción");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        
+        // Configurar CardLayout
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        
+        // Configurar DesktopPane
+        desktopPane = new JDesktopPane();
+        cardPanel.add(desktopPane, "desktop");
+        
+        // Configurar menú
+        createMenuBar();
+        
+        add(cardPanel);
+        setVisible(true);
+    }
+    
+    private void createMenuBar() {
+        menuBar = new JMenuBar();
+        
+        JMenu fileMenu = new JMenu("Archivo");
+        JMenuItem exitItem = new JMenuItem("Salir");
+        exitItem.addActionListener(e -> System.exit(0));
+        fileMenu.add(exitItem);
+        
+        JMenu dataMenu = new JMenu("Datos");
+        JMenuItem categoriasItem = new JMenuItem("Categorías");
+        JMenuItem insumosItem = new JMenuItem("Insumos");
+        JMenuItem obrasItem = new JMenuItem("Obras");
+        
+        categoriasItem.addActionListener(e -> openInternalFrame(new CategoriasInternalFrame()));
+        insumosItem.addActionListener(e -> openInternalFrame(new InsumosInternalFrame()));
+        obrasItem.addActionListener(e -> openInternalFrame(new ObrasInternalFrame()));
+        
+        dataMenu.add(categoriasItem);
+        dataMenu.add(insumosItem);
+        dataMenu.add(obrasItem);
+        
+        menuBar.add(fileMenu);
+        menuBar.add(dataMenu);
+        
+        setJMenuBar(menuBar);
+    }
+    
+    private void openInternalFrame(JInternalFrame internalFrame) {
+        // Desactivar menú
+        menuBar.setEnabled(false);
+        
+        // Configurar internal frame
+        internalFrame.setClosable(true);
+        internalFrame.setMaximizable(true);
+        internalFrame.setResizable(true);
+        
+        internalFrame.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosed(InternalFrameEvent e) {
+                menuBar.setEnabled(true);
+            }
+        });
+        
+        desktopPane.add(internalFrame);
+        internalFrame.setVisible(true);
+        internalFrame.toFront();
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new MainApplication());
+    }
+}
+
+class CategoriasInternalFrame extends JInternalFrame {
+    private ArrayList<String> categorias;
+    private JList<String> listaCategorias;
+    private DefaultListModel<String> listModel;
+    
+    public CategoriasInternalFrame() {
+        super("Gestión de Categorías", true, true, true, true);
+        setSize(400, 300);
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        categorias.forEach(listModel::addElement);
+        
+        listaCategorias = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(listaCategorias);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        categorias = new ArrayList<>();
+        File file = new File("categorias.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    categorias.add(line);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar categorías", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("categorias.txt"))) {
+            for (String categoria : categorias) {
+                writer.println(categoria);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar categorías", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void mostrarDialogoAgregar() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Agregar Categoría", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel label = new JLabel("Nombre:");
+        JTextField textField = new JTextField(20);
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(label, gbc);
+        
+        gbc.gridx = 1;
+        dialog.add(textField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nuevaCategoria = textField.getText().trim();
+            if (!nuevaCategoria.isEmpty()) {
+                categorias.add(nuevaCategoria);
+                listModel.addElement(nuevaCategoria);
+                guardarDatos();
+                dialog.dispose();
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarDialogoModificar() {
+        int selectedIndex = listaCategorias.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione una categoría para modificar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        String categoriaActual = categorias.get(selectedIndex);
+        
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Modificar Categoría", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel label = new JLabel("Nombre:");
+        JTextField textField = new JTextField(categoriaActual, 20);
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(label, gbc);
+        
+        gbc.gridx = 1;
+        dialog.add(textField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nuevaCategoria = textField.getText().trim();
+            if (!nuevaCategoria.isEmpty()) {
+                categorias.set(selectedIndex, nuevaCategoria);
+                listModel.set(selectedIndex, nuevaCategoria);
+                guardarDatos();
+                dialog.dispose();
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarConfirmacionEliminar() {
+        int selectedIndex = listaCategorias.getSelectedIndex();
+        if (selectedIndex != -1) {
+            int option = JOptionPane.showConfirmDialog(this, 
+                "¿Está seguro de eliminar esta categoría?", 
+                "Confirmar eliminación", 
+                JOptionPane.YES_NO_OPTION);
+                
+            if (option == JOptionPane.YES_OPTION) {
+                categorias.remove(selectedIndex);
+                listModel.remove(selectedIndex);
+                guardarDatos();
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione una categoría para eliminar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
+
+class InsumosInternalFrame extends JInternalFrame {
+    private ArrayList<String> insumos;
+    private JList<String> listaInsumos;
+    private DefaultListModel<String> listModel;
+    
+    public InsumosInternalFrame() {
+        super("Gestión de Insumos", true, true, true, true);
+        setSize(400, 300);
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        insumos.forEach(listModel::addElement);
+        
+        listaInsumos = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(listaInsumos);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        insumos = new ArrayList<>();
+        File file = new File("insumos.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    insumos.add(line);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar insumos", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("insumos.txt"))) {
+            for (String insumo : insumos) {
+                writer.println(insumo);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar insumos", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void mostrarDialogoAgregar() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Agregar Insumo", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel label = new JLabel("Nombre:");
+        JTextField textField = new JTextField(20);
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(label, gbc);
+        
+        gbc.gridx = 1;
+        dialog.add(textField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nuevoInsumo = textField.getText().trim();
+            if (!nuevoInsumo.isEmpty()) {
+                insumos.add(nuevoInsumo);
+                listModel.addElement(nuevoInsumo);
+                guardarDatos();
+                dialog.dispose();
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarDialogoModificar() {
+        int selectedIndex = listaInsumos.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un insumo para modificar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        String insumoActual = insumos.get(selectedIndex);
+        
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Modificar Insumo", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel label = new JLabel("Nombre:");
+        JTextField textField = new JTextField(insumoActual, 20);
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(label, gbc);
+        
+        gbc.gridx = 1;
+        dialog.add(textField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nuevoInsumo = textField.getText().trim();
+            if (!nuevoInsumo.isEmpty()) {
+                insumos.set(selectedIndex, nuevoInsumo);
+                listModel.set(selectedIndex, nuevoInsumo);
+                guardarDatos();
+                dialog.dispose();
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarConfirmacionEliminar() {
+        int selectedIndex = listaInsumos.getSelectedIndex();
+        if (selectedIndex != -1) {
+            int option = JOptionPane.showConfirmDialog(this, 
+                "¿Está seguro de eliminar este insumo?", 
+                "Confirmar eliminación", 
+                JOptionPane.YES_NO_OPTION);
+                
+            if (option == JOptionPane.YES_OPTION) {
+                insumos.remove(selectedIndex);
+                listModel.remove(selectedIndex);
+                guardarDatos();
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione un insumo para eliminar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
+
+class ObrasInternalFrame extends JInternalFrame {
+    private ArrayList<Obra> obras;
+    private JList<Obra> listaObras;
+    private DefaultListModel<Obra> listModel;
+    
+    public ObrasInternalFrame() {
+        super("Gestión de Obras", true, true, true, true);
+        setSize(600, 400);
+        
+        cargarDatos();
+        
+        listModel = new DefaultListModel<>();
+        obras.forEach(listModel::addElement);
+        
+        listaObras = new JList<>(listModel);
+        listaObras.setCellRenderer(new ObraCellRenderer());
+        JScrollPane scrollPane = new JScrollPane(listaObras);
+        
+        JButton agregarBtn = new JButton("Agregar");
+        JButton modificarBtn = new JButton("Modificar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        
+        agregarBtn.addActionListener(e -> mostrarDialogoAgregar());
+        modificarBtn.addActionListener(e -> mostrarDialogoModificar());
+        eliminarBtn.addActionListener(e -> mostrarConfirmacionEliminar());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(agregarBtn);
+        buttonPanel.add(modificarBtn);
+        buttonPanel.add(eliminarBtn);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+    
+    private void cargarDatos() {
+        obras = new ArrayList<>();
+        File file = new File("obras.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\\|");
+                    if (parts.length == 4) {
+                        obras.add(new Obra(parts[0], parts[1], parts[2], parts[3]));
+                    }
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar obras", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void guardarDatos() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("obras.txt"))) {
+            for (Obra obra : obras) {
+                writer.println(obra.getNombre() + "|" + obra.getDescripcion() + "|" + 
+                             obra.getFechaInicio() + "|" + obra.getFechaFin());
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar obras", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void mostrarDialogoAgregar() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Agregar Obra", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel nombreLabel = new JLabel("Nombre:");
+        JTextField nombreField = new JTextField(20);
+        
+        JLabel descLabel = new JLabel("Descripción:");
+        JTextArea descArea = new JTextArea(3, 20);
+        JScrollPane descScroll = new JScrollPane(descArea);
+        
+        JLabel inicioLabel = new JLabel("Fecha Inicio:");
+        JTextField inicioField = new JTextField(10);
+        
+        JLabel finLabel = new JLabel("Fecha Fin:");
+        JTextField finField = new JTextField(10);
+        
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(nombreLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(nombreField, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(descLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(descScroll, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(inicioLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(inicioField, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(finLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(finField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nombre = nombreField.getText().trim();
+            String descripcion = descArea.getText().trim();
+            String fechaInicio = inicioField.getText().trim();
+            String fechaFin = finField.getText().trim();
+            
+            if (!nombre.isEmpty() && !descripcion.isEmpty() && !fechaInicio.isEmpty() && !fechaFin.isEmpty()) {
+                Obra nuevaObra = new Obra(nombre, descripcion, fechaInicio, fechaFin);
+                obras.add(nuevaObra);
+                listModel.addElement(nuevaObra);
+                guardarDatos();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Todos los campos son obligatorios", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarDialogoModificar() {
+        int selectedIndex = listaObras.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione una obra para modificar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        Obra obraActual = obras.get(selectedIndex);
+        
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Modificar Obra", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        JLabel nombreLabel = new JLabel("Nombre:");
+        JTextField nombreField = new JTextField(obraActual.getNombre(), 20);
+        
+        JLabel descLabel = new JLabel("Descripción:");
+        JTextArea descArea = new JTextArea(obraActual.getDescripcion(), 3, 20);
+        JScrollPane descScroll = new JScrollPane(descArea);
+        
+        JLabel inicioLabel = new JLabel("Fecha Inicio:");
+        JTextField inicioField = new JTextField(obraActual.getFechaInicio(), 10);
+        
+        JLabel finLabel = new JLabel("Fecha Fin:");
+        JTextField finField = new JTextField(obraActual.getFechaFin(), 10);
+        
+        JButton aceptarBtn = new JButton("Aceptar");
+        JButton cancelarBtn = new JButton("Cancelar");
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        dialog.add(nombreLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(nombreField, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(descLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(descScroll, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(inicioLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(inicioField, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.EAST;
+        dialog.add(finLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        dialog.add(finField, gbc);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(aceptarBtn);
+        buttonPanel.add(cancelarBtn);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(buttonPanel, gbc);
+        
+        aceptarBtn.addActionListener(e -> {
+            String nombre = nombreField.getText().trim();
+            String descripcion = descArea.getText().trim();
+            String fechaInicio = inicioField.getText().trim();
+            String fechaFin = finField.getText().trim();
+            
+            if (!nombre.isEmpty() && !descripcion.isEmpty() && !fechaInicio.isEmpty() && !fechaFin.isEmpty()) {
+                obraActual.setNombre(nombre);
+                obraActual.setDescripcion(descripcion);
+                obraActual.setFechaInicio(fechaInicio);
+                obraActual.setFechaFin(fechaFin);
+                listModel.set(selectedIndex, obraActual);
+                guardarDatos();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Todos los campos son obligatorios", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+        
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void mostrarConfirmacionEliminar() {
+        int selectedIndex = listaObras.getSelectedIndex();
+        if (selectedIndex != -1) {
+            int option = JOptionPane.showConfirmDialog(this, 
+                "¿Está seguro de eliminar esta obra?", 
+                "Confirmar eliminación", 
+                JOptionPane.YES_NO_OPTION);
+                
+            if (option == JOptionPane.YES_OPTION) {
+                obras.remove(selectedIndex);
+                listModel.remove(selectedIndex);
+                guardarDatos();
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione una obra para eliminar", 
+                "Advertencia", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
+
+class Obra {
+    private String nombre;
+    private String descripcion;
+    private String fechaInicio;
+    private String fechaFin;
+    
+    public Obra(String nombre, String descripcion, String fechaInicio, String fechaFin) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+    }
+    
+    public String getNombre() {
+        return nombre;
+    }
+    
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+    
+    public String getDescripcion() {
+        return descripcion;
+    }
+    
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+    
+    public String getFechaInicio() {
+        return fechaInicio;
+    }
+    
+    public void setFechaInicio(String fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+    
+    public String getFechaFin() {
+        return fechaFin;
+    }
+    
+    public void setFechaFin(String fechaFin) {
+        this.fechaFin = fechaFin;
+    }
+    
+    @Override
+    public String toString() {
+        return nombre + " (" + fechaInicio + " - " + fechaFin + ")";
+    }
+}
+
+class ObraCellRenderer extends DefaultListCellRenderer {
+    @Override
+    public Component getListCellRendererComponent(JList<?> list, Object value, int index, 
+                                                boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        
+        if (value instanceof Obra) {
+            Obra obra = (Obra) value;
+            setText("<html><b>" + obra.getNombre() + "</b><br>" + 
+                   obra.getDescripcion() + "<br>" +
+                   "Inicio: " + obra.getFechaInicio() + " - Fin: " + obra.getFechaFin() + "</html>");
+        }
+        
+        return this;
+    }
+}
