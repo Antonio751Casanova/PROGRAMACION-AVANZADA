@@ -1,0 +1,260 @@
+package Actividades;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import Libreria.Archivotxt;
+import Libreria.Librerias;
+import Modelo.Categoria;
+import Modelo.ListaCategorias;
+
+public class Practica03_c extends JInternalFrame implements ActionListener {
+
+    private ListaCategorias listacategorias;
+    private Archivotxt archivocategorias;
+    private Librerias libreria;
+
+    // Componentes de la interfaz
+    private JTextField Tid, Tcategoria;
+    private JButton Bagregar, Beliminar, Bsalir;
+    private JPanel panelFormulario;
+    private JTable Tcategorias;
+    private DefaultTableModel modelocategorias;
+    private JFrame padre;
+    private JMenuBar barra;
+
+    public Practica03_c(JFrame padre) {
+        super("Administración de Categorías", true, true, true, true);
+        this.padre = padre;
+        this.libreria = new Librerias();
+        
+        inicializarComponentes();
+        configurarInterfaz();
+        
+        if (this.padre != null) {
+            this.barra = this.padre.getJMenuBar();
+            this.barra = menuspadre(this.barra, false);
+        }
+    }
+
+    private void inicializarComponentes() {
+        this.archivocategorias = new Archivotxt("Categoria");
+        this.listacategorias = new ListaCategorias();
+
+        if (this.archivocategorias.existe()) {
+            this.listacategorias.cargarCategorias(this.archivocategorias.cargar());
+        }
+
+        modelocategorias = new DefaultTableModel();
+        modelocategorias.addColumn("ID");
+        modelocategorias.addColumn("Categoría");
+        actualizarTabla();
+    }
+
+    private void configurarInterfaz() {
+        setSize(500, 350);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        
+        panelFormulario = new JPanel();
+        panelFormulario.setLayout(null);
+        getContentPane().add(panelFormulario, BorderLayout.CENTER);
+        
+        crearComponentesUI();
+    }
+
+    private void crearComponentesUI() {
+        // Componentes para ID
+        JLabel labelId = new JLabel("ID:");
+        labelId.setBounds(20, 20, 40, 20);
+        panelFormulario.add(labelId);
+
+        Tid = new JTextField();
+        Tid.setEditable(false);
+        Tid.setBounds(70, 20, 100, 25);
+        panelFormulario.add(Tid);
+
+        // Componentes para Categoría
+        JLabel labelCategoria = new JLabel("Categoría:");
+        labelCategoria.setBounds(180, 20, 80, 20);
+        panelFormulario.add(labelCategoria);
+
+        Tcategoria = new JTextField();
+        Tcategoria.setEditable(false);
+        Tcategoria.setBounds(260, 20, 200, 25);
+        panelFormulario.add(Tcategoria);
+
+        // Botones
+        Bagregar = new JButton("Agregar");
+        Bagregar.setBounds(20, 60, 100, 30);
+        Bagregar.addActionListener(this);
+        panelFormulario.add(Bagregar);
+
+        Beliminar = new JButton("Eliminar");
+        Beliminar.setBounds(140, 60, 100, 30);
+        Beliminar.addActionListener(this);
+        panelFormulario.add(Beliminar);
+
+        Bsalir = new JButton("Salir");
+        Bsalir.setBounds(260, 60, 100, 30);
+        Bsalir.addActionListener(this);
+        panelFormulario.add(Bsalir);
+        
+        // Tabla de categorías
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(20, 100, 450, 200);
+        
+        Tcategorias = new JTable();
+        Tcategorias.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        Tcategorias.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    cargarDatosSeleccionados();
+                }
+            }
+        });
+        scrollPane.setViewportView(Tcategorias);
+        panelFormulario.add(scrollPane);
+    }
+
+    private void actualizarTabla() {
+        modelocategorias.setRowCount(0); // Limpiar tabla
+        
+        for (Categoria cat : listacategorias.getLista()) {
+            modelocategorias.addRow(new Object[]{cat.getIdcategoria(), cat.getNombre()});
+        }
+        
+        Tcategorias.setModel(modelocategorias);
+    }
+
+    private void cargarDatosSeleccionados() {
+        int fila = Tcategorias.getSelectedRow();
+        if (fila >= 0) {
+            Tid.setText(Tcategorias.getValueAt(fila, 0).toString());
+            Tcategoria.setText(Tcategorias.getValueAt(fila, 1).toString());
+        }
+    }
+
+    public void Volveralinicio() {
+        this.Bagregar.setText("Agregar");
+        this.Bsalir.setText("Salir");
+        this.Beliminar.setEnabled(true);
+        this.Tid.setEditable(false);
+        this.Tcategoria.setEditable(false);
+        this.Tid.setText("");
+        this.Tcategoria.setText("");
+    }
+
+    public void Altas() {
+        if (this.Bagregar.getText().equals("Agregar")) {
+            this.Bagregar.setText("Salvar");
+            this.Bsalir.setText("Cancelar");
+            this.Beliminar.setEnabled(false);
+            this.Tid.setEditable(true);
+            this.Tcategoria.setEditable(true);
+            this.Tid.setText("");
+            this.Tcategoria.setText("");
+            this.Tcategoria.requestFocus();
+        } else {
+            if (esDatosCompletos()) {
+                String id = this.Tid.getText().trim();
+                String nombre = this.Tcategoria.getText().trim();
+                
+                Categoria nueva = new Categoria(id, nombre);
+                
+                if (!this.listacategorias.agregarCategoria(nueva)) {
+                    JOptionPane.showMessageDialog(this, "El ID " + id + " ya existe");
+                } else {
+                    this.archivocategorias.guardar(this.listacategorias.toArchivo());
+                    this.actualizarTabla();
+                }
+            }
+            this.Volveralinicio();
+        }
+    }
+
+    public void Eliminar() {
+        int fila = Tcategorias.getSelectedRow();
+        if (fila >= 0) {
+            String id = Tcategorias.getValueAt(fila, 0).toString();
+            String nombre = Tcategorias.getValueAt(fila, 1).toString();
+            
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                "¿Eliminar la categoría " + nombre + "?", 
+                "Confirmar eliminación", 
+                JOptionPane.YES_NO_OPTION);
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                if (this.listacategorias.eliminarCategoria(id)) {
+                    this.archivocategorias.guardar(this.listacategorias.toArchivo());
+                    this.actualizarTabla();
+                    this.Volveralinicio();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo eliminar la categoría");
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione una categoría para eliminar");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == this.Bagregar) {
+            this.Altas();
+        } else if (e.getSource() == this.Beliminar) {
+            this.Eliminar();
+        } else if (e.getSource() == Bsalir) {
+            if (this.Bsalir.getText().equals("Cancelar")) {
+                this.Volveralinicio();
+            } else {
+                if (this.padre != null) {
+                    this.barra = menuspadre(this.barra, true);
+                }
+                this.dispose();
+            }
+        }
+     // In the actionPerformed method of Practica05, replace:
+        if (e.getSource() == this.SMcategorias)
+            JOptionPane.showMessageDialog(this.VentanaPrincipal, "Llamando a Conceptos");
+
+        // With:
+        if (e.getSource() == this.SMcategorias) {
+            Practica03_c categoriasFrame = new Practica03_c(this.VentanaPrincipal);
+            categoriasFrame.setVisible(true);
+            this.VentanaPrincipal.getContentPane().add(categoriasFrame);
+            categoriasFrame.setLocation(50, 50);
+        }
+        
+    }
+    
+    public JMenuBar menuspadre(JMenuBar barra, boolean accion) {
+        if (barra != null) {
+            int cantmenus = barra.getMenuCount();
+            for(int pos = 0; pos < cantmenus; pos++) {
+                barra.getMenu(pos).setEnabled(accion);
+            }
+        }
+        return barra;
+    }
+    
+    public Boolean esDatosCompletos() {
+        String id = this.Tid.getText().trim();
+        String nombre = this.Tcategoria.getText().trim();
+        
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El ID no puede estar vacío");
+            return false;
+        }
+        
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre de categoría no puede estar vacío");
+            return false;
+        }
+        
+        return true;
+    }
+}
