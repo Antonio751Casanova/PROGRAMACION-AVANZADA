@@ -1,0 +1,117 @@
+package controlador;
+
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.List;
+
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import modelo.Libro;
+
+public class JsonController {
+    private static final String ARCHIVO_JSON = "data/libros.json";
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public static void guardarLibros(List<Libro> libros) {
+        try (FileWriter writer = new FileWriter(ARCHIVO_JSON)) {
+            gson.toJson(libros, writer);
+        } catch (IOException e) {
+            System.err.println("Error al guardar en JSON: " + e.getMessage());
+        }
+    }
+
+    public static List<Libro> cargarLibros() {
+        try (FileReader reader = new FileReader(ARCHIVO_JSON)) {
+            Type tipoListaLibros = new TypeToken<List<Libro>>(){}.getType();
+            return gson.fromJson(reader, tipoListaLibros);
+        } catch (IOException e) {
+            System.err.println("Error al cargar desde JSON: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static void sincronizarConExcel(DefaultTableModel modeloTabla) {
+        // Paso 1: Leer datos actuales del JSON
+        List<Libro> libros = cargarLibros();
+
+        if (libros == null || libros.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                "No hay datos en el archivo JSON para sincronizar",
+                "Advertencia",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Paso 2: Crear un nuevo Excel con estos datos
+        try (Workbook workbook = new XSSFWorkbook();
+             FileOutputStream fos = new FileOutputStream("data/Libros.xlsx")) {
+
+            Sheet sheet = workbook.createSheet("Libros");
+
+            // Escribir cabeceras
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"ISBN", "Título", "Autor", "Editorial", "Género",
+                              "Año", "Precio", "Descripción", "Portada"};
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            // Escribir datos
+            int rowNum = 1;
+            for (Libro libro : libros) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(libro.getISBN());
+                row.createCell(1).setCellValue(libro.getTitulo());
+                row.createCell(2).setCellValue(libro.getAutor());
+                row.createCell(3).setCellValue(libro.getEditorial());
+                row.createCell(4).setCellValue(libro.getGenero());
+                row.createCell(5).setCellValue(libro.getAñoPublicacion());
+                row.createCell(6).setCellValue(libro.getPrecio());
+                row.createCell(7).setCellValue(libro.getDescripcion());
+                row.createCell(8).setCellValue(libro.getPortadaPath());
+            }
+
+            workbook.write(fos);
+
+            // Paso 3: Actualizar la tabla visual
+            modeloTabla.setRowCount(0);
+            for (Libro libro : libros) {
+                modeloTabla.addRow(new Object[]{
+                    libro.getISBN(),
+                    libro.getTitulo(),
+                    libro.getAutor(),
+                    libro.getEditorial(),
+                    libro.getGenero(),
+                    libro.getAñoPublicacion(),
+                    libro.getPrecio(),
+                    libro.getDescripcion(),
+                    libro.getPortadaPath()
+                });
+            }
+
+            JOptionPane.showMessageDialog(null,
+                "Sincronización completada: JSON → Excel",
+                "Éxito",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                "Error al sincronizar con Excel: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
