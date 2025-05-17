@@ -1,0 +1,547 @@
+package vista;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.swing.DefaultCellEditor;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import controlador.JsonController;
+import controlador.LibroController;
+import modelo.Libro;
+
+public class LibrosView extends JFrame {
+    private JTable tablaLibros;
+    private DefaultTableModel modeloTabla;
+    private JTextField txtBusqueda;
+    private JComboBox<String> comboFiltros;
+    private JComboBox<String> comboGeneros;
+    private static final long serialVersionUID = 1L;
+
+    public LibrosView() {
+        setTitle("Gestión de Libros");
+        setSize(1200, 700);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Verificar y crear estructura de archivos
+        File dataDir = new File("data");
+        if (!dataDir.exists()) {
+            dataDir.mkdirs();
+        }
+
+        File excelFile = new File("data/Libros.xlsx");
+        if (!excelFile.exists()) {
+            crearArchivoExcelInicial(excelFile);
+        }
+
+        // Modelo de tabla
+        modeloTabla = new DefaultTableModel(
+            new Object[]{"ISBN", "Título", "Autor", "Editorial", "Género",
+                         "Año", "Precio", "Descripción"},
+            0
+        ) {
+            /**
+			 *
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public Class<?> getColumnClass(int columnIndex) {
+                switch (columnIndex) {
+                    case 5: return Integer.class;
+                    case 6: return Double.class;
+                    case 8: return Icon.class;
+                    default: return String.class;
+                }
+            }
+        };
+
+        tablaLibros = new JTable(modeloTabla);
+        configurarTabla();
+
+        // Componentes principales
+        add(configurarPanelBusqueda(), BorderLayout.NORTH);
+        add(new JScrollPane(tablaLibros), BorderLayout.CENTER);
+        add(configurarPanelBotones(), BorderLayout.SOUTH);
+
+        // Observador de archivo
+        LibroController.iniciarObservadorExcel(modeloTabla);
+
+        // Configuración visual
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                ajustarAnchoColumnas();
+            }
+        });
+
+        configurarMenuOpciones();
+
+        setVisible(true);
+        revalidate();
+
+     // Cargar datos al iniciar
+        cargarDatosIniciales();
+
+        // Configurar listener para guardar al cerrar
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                guardarDatosAlSalir();
+                super.windowClosing(e);
+            }
+        });
+    }
+
+    private void cargarDatosIniciales() {
+        // Primero intenta cargar desde JSON
+        List<Libro> libros = JsonController.cargarLibros();
+
+        if (libros != null && !libros.isEmpty()) {
+            // Cargar desde JSON
+            for (Libro libro : libros) {
+                modeloTabla.addRow(new Object[]{
+                    libro.getISBN(),
+                    libro.getTitulo(),
+                    libro.getAutor(),
+                    libro.getEditorial(),
+                    libro.getGenero(),
+                    libro.getAñoPublicacion(),
+                    libro.getPrecio(),
+                    libro.getDescripcion(),
+
+                });
+            }
+        } else {
+            // Si no hay JSON, cargar desde Excel
+            LibroController.cargarDatosExcel(modeloTabla);
+        }
+    }
+
+    private void guardarDatosAlSalir() {
+        List<Libro> libros = new ArrayList<>();
+
+        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+            Libro libro = new Libro();
+            libro.setISBN(modeloTabla.getValueAt(i, 0).toString());
+            libro.setTitulo(modeloTabla.getValueAt(i, 1).toString());
+            libro.setAutor(modeloTabla.getValueAt(i, 2).toString());
+            libro.setEditorial(modeloTabla.getValueAt(i, 3).toString());
+            libro.setGenero(modeloTabla.getValueAt(i, 4).toString());
+            libro.setAñoPublicacion(Integer.parseInt(modeloTabla.getValueAt(i, 5).toString()));
+            libro.setPrecio(Double.parseDouble(modeloTabla.getValueAt(i, 6).toString()));
+            libro.setDescripcion(modeloTabla.getValueAt(i, 7).toString());
+            libro.setPortadaPath(modeloTabla.getValueAt(i, 8).toString());
+
+            libros.add(libro);
+        }
+
+        JsonController.guardarLibros(libros);
+    }
+
+    private void crearArchivoExcelInicial(File excelFile) {
+        try (Workbook workbook = new XSSFWorkbook();
+             FileOutputStream fos = new FileOutputStream(excelFile)) {
+
+            workbook.createSheet("Libros");
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"ISBN", "Título", "Autor", "Editorial", "Género",
+                              "Año", "Precio", "Descripción", };
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            workbook.write(fos);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error al crear archivo Excel: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void ajustarAnchoColumnas() {
+        TableColumnModel columnModel = tablaLibros.getColumnModel();
+        int anchoTotal = tablaLibros.getWidth();
+        int[] porcentajes = {10, 15, 12, 10, 10, 5, 8, 15, 15};
+
+        for (int i = 0; i < columnModel.getColumnCount(); i++) {
+            TableColumn col = columnModel.getColumn(i);
+            col.setPreferredWidth(anchoTotal * porcentajes[i] / 100);
+        }
+    }
+
+    private void configurarTabla() {
+        tablaLibros.setRowHeight(80);
+        tablaLibros.setIntercellSpacing(new Dimension(10, 5));
+        tablaLibros.setShowHorizontalLines(true);
+        tablaLibros.setShowVerticalLines(false);
+        tablaLibros.setGridColor(new Color(220, 220, 220));
+        tablaLibros.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaLibros.setBackground(Color.WHITE);
+        tablaLibros.setForeground(Color.BLACK);
+        tablaLibros.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        configurarRenderers();
+        configurarEditores();
+        configurarCabecera();
+    }
+
+    private void configurarRenderers() {
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.CENTER);
+
+                if (!isSelected) {
+                    setBackground(row % 2 == 0 ? Color.WHITE : new Color(240, 240, 240));
+                }
+                return this;
+            }
+        };
+
+        for (int i = 0; i < tablaLibros.getColumnCount(); i++) {
+            if (i != 6 && i != 8) {
+                tablaLibros.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
+        }
+
+        tablaLibros.setDefaultRenderer(Double.class, new DefaultTableCellRenderer() {
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof Double) {
+                    setText(String.format("$%,.2f", value));
+                    setHorizontalAlignment(SwingConstants.RIGHT);
+                } else {
+                    setText("");
+                }
+            }
+        });
+
+
+
+
+    }
+
+    private void configurarEditores() {
+        JTextField editorPrecio = new JTextField();
+        editorPrecio.setHorizontalAlignment(SwingConstants.RIGHT);
+        tablaLibros.setDefaultEditor(Double.class, new DefaultCellEditor(editorPrecio) {
+            @Override
+            public boolean stopCellEditing() {
+                try {
+                    String value = editorPrecio.getText().replace("$", "").replace(",", "");
+                    double precio = Double.parseDouble(value);
+                    if (precio < 0) {
+						throw new NumberFormatException();
+					}
+                    return super.stopCellEditing();
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Ingrese un precio válido", "Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+        });
+
+        JComboBox<String> comboEditor = new JComboBox<>(new String[]{"Novela", "Ciencia Ficción", "Fantasía",
+                                                                   "Terror", "Biografía", "Historia", "Infantil"});
+        comboEditor.setEditable(false);
+        tablaLibros.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(comboEditor));
+
+        tablaLibros.setDefaultEditor(String.class, new DefaultCellEditor(new JTextField()));
+    }
+
+    private void configurarCabecera() {
+        JTableHeader header = tablaLibros.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        header.setBackground(new Color(70, 130, 180));
+        header.setForeground(Color.BLACK);
+        header.setReorderingAllowed(false);
+        ((DefaultTableCellRenderer)header.getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+    }
+
+    private JPanel configurarPanelBusqueda() {
+        JPanel panelBusqueda = new JPanel();
+
+        txtBusqueda = new JTextField(20);
+        comboFiltros = new JComboBox<>(new String[]{"Todos", "ISBN", "Título", "Autor", "Editorial"});
+        comboGeneros = new JComboBox<>(new String[]{"Todos", "Novela", "Ciencia Ficción", "Fantasía",
+                                                   "Terror", "Biografía", "Historia", "Infantil"});
+        JButton btnBuscar = new JButton("Buscar");
+
+        btnBuscar.addActionListener(e -> buscarLibros());
+        comboGeneros.addActionListener(e -> filtrarPorGenero());
+
+        panelBusqueda.add(new JLabel("Filtrar por:"));
+        panelBusqueda.add(comboFiltros);
+        panelBusqueda.add(new JLabel("Buscar:"));
+        panelBusqueda.add(txtBusqueda);
+        panelBusqueda.add(new JLabel("Género:"));
+        panelBusqueda.add(comboGeneros);
+        panelBusqueda.add(btnBuscar);
+
+        return panelBusqueda;
+    }
+
+    private JPanel configurarPanelBotones() {
+        JPanel panelBotones = new JPanel();
+
+
+
+        JButton btnNuevoLibro = new JButton("Nuevo Libro");
+        btnNuevoLibro.addActionListener(e -> agregarNuevoLibro());
+
+        JButton btnGuardar = new JButton("Guardar Cambios");
+        btnGuardar.addActionListener(e -> LibroController.guardarCambiosExcel(modeloTabla, "data/Libros.xlsx"));
+
+        JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.addActionListener(e -> eliminarLibro());
+
+        panelBotones.add(btnNuevoLibro);
+
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnEliminar);
+
+     // Nuevo botón de sincronización
+        JButton btnSincronizar = new JButton("Sincronizar JSON → Excel");
+        btnSincronizar.addActionListener(e -> sincronizarDatos());
+
+        // Añade tooltip para explicar la función
+        btnSincronizar.setToolTipText("Actualiza el archivo Excel con los datos del JSON");
+
+        // Cambia el color para distinguirlo
+        btnSincronizar.setBackground(new Color(100, 149, 237)); // Azul claro
+        btnSincronizar.setForeground(Color.BLACK);
+
+        panelBotones.add(btnSincronizar);
+
+        return panelBotones;
+    }
+
+    private void sincronizarDatos() {
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+            "¿Estás seguro de sobrescribir el Excel con los datos del JSON?\n"
+            + "Esta acción no se puede deshacer.",
+            "Confirmar sincronización",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            JsonController.sincronizarConExcel(modeloTabla);
+        }
+    }
+
+    private void configurarMenuOpciones() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu menuOpciones = new JMenu("Opciones");
+        menuOpciones.setMnemonic(KeyEvent.VK_O);
+
+        JCheckBoxMenuItem itemActivar = new JCheckBoxMenuItem("Tabla activa", true);
+        itemActivar.setMnemonic(KeyEvent.VK_T);
+        itemActivar.addActionListener(e -> {
+            boolean activa = itemActivar.isSelected();
+            tablaLibros.setEnabled(activa);
+            if (activa) {
+                configurarTabla();
+            } else {
+                tablaLibros.setBackground(new Color(240, 240, 240));
+                tablaLibros.setForeground(Color.GRAY);
+            }
+        });
+
+        JMenuItem itemLimpiarFiltros = new JMenuItem("Limpiar filtros", KeyEvent.VK_L);
+        itemLimpiarFiltros.addActionListener(e -> {
+            comboGeneros.setSelectedIndex(0);
+            txtBusqueda.setText("");
+            tablaLibros.setRowSorter(null);
+        });
+
+        menuOpciones.add(itemActivar);
+        menuOpciones.addSeparator();
+        menuOpciones.add(itemLimpiarFiltros);
+
+        menuBar.add(menuOpciones);
+        setJMenuBar(menuBar);
+    }
+
+    private void agregarNuevoLibro() {
+        JDialog dialog = new JDialog(this, "Nuevo Libro", true);
+        dialog.setLayout(new GridLayout(0, 2, 5, 5));
+
+        JTextField txtISBN = new JTextField();
+        JTextField txtTitulo = new JTextField();
+        JTextField txtAutor = new JTextField();
+        JTextField txtEditorial = new JTextField();
+        JComboBox<String> cbGenero = new JComboBox<>(new String[]{"Novela", "Ciencia Ficción", "Fantasía",
+                                                                "Terror", "Biografía", "Historia", "Infantil"});
+        JSpinner spnAño = new JSpinner(new SpinnerNumberModel(2023, 1900, 2100, 1));
+        JSpinner spnPrecio = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 100000.0, 0.1));
+        JTextField txtDescripcion = new JTextField();
+        JTextField txtPortada = new JTextField();
+
+
+
+
+        spnPrecio.setEditor(new JSpinner.NumberEditor(spnPrecio, "#0.00"));
+
+        agregarCampo(dialog, "ISBN:", txtISBN);
+        agregarCampo(dialog, "Título:", txtTitulo);
+        agregarCampo(dialog, "Autor:", txtAutor);
+        agregarCampo(dialog, "Editorial:", txtEditorial);
+        agregarCampo(dialog, "Género:", cbGenero);
+        agregarCampo(dialog, "Año:", spnAño);
+        agregarCampo(dialog, "Precio:", spnPrecio);
+        agregarCampo(dialog, "Descripción:", txtDescripcion);
+
+
+        JButton btnGuardar = new JButton("Guardar");
+        btnGuardar.addActionListener(e -> {
+            if (validarCampos(txtISBN, txtTitulo, txtAutor)) {
+                modeloTabla.addRow(new Object[]{
+                    txtISBN.getText(),
+                    txtTitulo.getText(),
+                    txtAutor.getText(),
+                    txtEditorial.getText(),
+                    cbGenero.getSelectedItem(),
+                    spnAño.getValue(),
+                    spnPrecio.getValue(),
+                    txtDescripcion.getText(),
+
+                });
+                dialog.dispose();
+            }
+        });
+
+        dialog.add(new JLabel());
+        dialog.add(btnGuardar);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void buscarLibros() {
+        String texto = txtBusqueda.getText().trim().toLowerCase();
+        String filtro = comboFiltros.getSelectedItem().toString();
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(modeloTabla);
+        tablaLibros.setRowSorter(sorter);
+
+        if (texto.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            int col = -1;
+            switch (filtro) {
+                case "ISBN": col = 0; break;
+                case "Título": col = 1; break;
+                case "Autor": col = 2; break;
+                case "Editorial": col = 3; break;
+            }
+
+            if (col != -1) {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + texto, col));
+            }
+        }
+    }
+
+    private void filtrarPorGenero() {
+        String genero = comboGeneros.getSelectedItem().toString();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(modeloTabla);
+        tablaLibros.setRowSorter(sorter);
+
+        if (!genero.equals("Todos")) {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)^" + Pattern.quote(genero) + "$", 4));
+        } else {
+            sorter.setRowFilter(null);
+        }
+    }
+
+    private void eliminarLibro() {
+        int fila = tablaLibros.getSelectedRow();
+        if (fila >= 0) {
+            modeloTabla.removeRow(fila);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Seleccione un libro primero",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void agregarCampo(JDialog dialog, String label, Component field) {
+        dialog.add(new JLabel(label));
+        dialog.add(field);
+    }
+
+    private void agregarCampoConBoton(JDialog dialog, String label, JTextField field, JButton button) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(field, BorderLayout.CENTER);
+        panel.add(button, BorderLayout.EAST);
+        dialog.add(new JLabel(label));
+        dialog.add(panel);
+    }
+
+    private boolean validarCampos(JTextField... campos) {
+        for (JTextField campo : campos) {
+            if (campo.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null,
+                    "Todos los campos obligatorios deben estar completos",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+}
