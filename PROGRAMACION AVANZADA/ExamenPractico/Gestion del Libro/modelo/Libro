@@ -1,0 +1,120 @@
+package modelo;
+
+public class Libro {
+    private String ISBN;
+    private String titulo;
+    private String autor;
+    private String editorial;
+    private String genero;
+    private int añoPublicacion;
+    private double precio;
+    private String descripcion;
+    private String portadaPath;
+
+    public Libro(String ISBN, String titulo, String autor, String editorial,
+                String genero, int añoPublicacion, double precio,
+                String descripcion, String portadaPath) {
+        this.ISBN = ISBN;
+        this.titulo = titulo;
+        this.autor = autor;
+        this.editorial = editorial;
+        this.genero = genero;
+        this.añoPublicacion = añoPublicacion;
+        this.precio = precio;
+        this.descripcion = descripcion;
+        this.portadaPath = portadaPath;
+    }
+
+	public Libro() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public String getISBN() {
+		return ISBN;
+	}
+
+	public void setISBN(String iSBN) {
+		ISBN = iSBN;
+	}
+
+	public String getTitulo() {
+		return titulo;
+	}
+
+	public void setTitulo(String titulo) {
+		this.titulo = titulo;
+	}
+
+	public String getAutor() {
+		return autor;
+	}
+
+	public void setAutor(String autor) {
+		this.autor = autor;
+	}
+
+	public String getEditorial() {
+		return editorial;
+	}
+
+	public void setEditorial(String editorial) {
+		this.editorial = editorial;
+	}
+
+	public String getGenero() {
+		return genero;
+	}
+
+	public void setGenero(String genero) {
+		this.genero = genero;
+	}
+
+	public int getAñoPublicacion() {
+		return añoPublicacion;
+	}
+
+	public void setAñoPublicacion(int añoPublicacion) {
+		this.añoPublicacion = añoPublicacion;
+	}
+
+	public double getPrecio() {
+		return precio;
+	}
+
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public String getPortadaPath() {
+		return portadaPath;
+	}
+
+	public void setPortadaPath(String portadaPath) {
+		this.portadaPath = portadaPath;
+	}
+
+	 @Override
+	    public String toString() {
+	        return "Libro{" +
+	                "ISBN='" + ISBN + '\'' +
+	                ", titulo='" + titulo + '\'' +
+	                ", autor='" + autor + '\'' +
+	                ", editorial='" + editorial + '\'' +
+	                ", genero='" + genero + '\'' +
+	                ", añoPublicacion=" + añoPublicacion +
+	                ", precio=" + precio +
+	                ", descripcion='" + descripcion + '\'' +
+	                ", portadaPath='" + portadaPath + '\'' +
+	                '}';
+	    }
+
+
+}
