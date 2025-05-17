@@ -1,0 +1,54 @@
+package controlador;
+
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+
+public class ExcelFileWatcher implements Runnable {
+    private DefaultTableModel modeloTabla;
+    private String rutaArchivo;
+
+    public ExcelFileWatcher(DefaultTableModel modeloTabla, String rutaArchivo) {
+        this.modeloTabla = modeloTabla;
+        this.rutaArchivo = rutaArchivo;
+    }
+
+    @Override
+    public void run() {
+        try {
+            Path directorio = Paths.get("data");
+            WatchService watchService = FileSystems.getDefault().newWatchService();
+            directorio.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+
+            while (true) {
+                WatchKey key = watchService.take();
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    if (event.context().toString().equals("Libros.xlsx")) {
+                        try {
+                            Thread.sleep(500);
+                            SwingUtilities.invokeLater(() -> {
+                                try {
+                                    LibroController.cargarDatosExcel(modeloTabla);
+                                } catch (Exception ex) {
+                                    System.err.println("Error al cargar: " + ex.getMessage());
+                                }
+                            });
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+                key.reset();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
