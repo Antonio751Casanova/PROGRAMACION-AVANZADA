@@ -1,0 +1,266 @@
+package controlador;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class LibroController {
+    private static boolean isWatching = false;
+
+
+
+    public static void iniciarObservadorExcel(DefaultTableModel modeloTabla) {
+        if (isWatching) {
+			return;
+		}
+
+        new Thread(() -> {
+            try {
+                Path path = Paths.get("data/Libros.xlsx");
+                WatchService watchService = FileSystems.getDefault().newWatchService();
+                path.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+
+                isWatching = true;
+                while (isWatching) {
+                    WatchKey key = watchService.take();
+                    for (WatchEvent<?> event : key.pollEvents()) {
+                        if (event.context().toString().equals("Libros.xlsx")) {
+                            Thread.sleep(1000);
+                            cargarDatosExcel(modeloTabla);
+                            break;
+                        }
+                    }
+                    key.reset();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+
+
+
+    public static void detenerObservadorExcel() {
+        isWatching = false;
+    }
+
+    public static void cargarDatosExcel(DefaultTableModel modeloTabla) {
+        File file = new File("data/Libros.xlsx");
+
+        if (!file.exists()) {
+            JOptionPane.showMessageDialog(null,
+                "El archivo Libros.xlsx no existe en la carpeta data/",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (file.length() == 0) {
+            JOptionPane.showMessageDialog(null,
+                "El archivo Excel está vacío",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try (FileInputStream fis = new FileInputStream(file);
+                     Workbook workbook = new XSSFWorkbook(fis)) {
+
+                    Sheet sheet = workbook.getSheetAt(0);
+                    SwingUtilities.invokeLater(() -> modeloTabla.setRowCount(0));
+
+                    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                        Row row = sheet.getRow(i);
+                        if (row != null) {
+                            Object[] fila = new Object[9];
+
+                            fila[0] = (row.getCell(0) != null) ? row.getCell(0).toString() : "";
+                            fila[1] = (row.getCell(1) != null) ? row.getCell(1).toString() : "";
+                            fila[2] = (row.getCell(2) != null) ? row.getCell(2).toString() : "";
+                            fila[3] = (row.getCell(3) != null) ? row.getCell(3).toString() : "";
+                            fila[4] = (row.getCell(4) != null) ? row.getCell(4).toString() : "";
+
+                            try {
+                                fila[5] = (row.getCell(5) != null) ?
+                                    Integer.parseInt(row.getCell(5).toString()) : 0;
+                            } catch (Exception e) {
+                                fila[5] = 0;
+                            }
+
+                            try {
+                                fila[6] = (row.getCell(6) != null) ?
+                                    Double.parseDouble(row.getCell(6).toString()) : 0.0;
+                            } catch (Exception e) {
+                                fila[6] = 0.0;
+                            }
+
+                            fila[7] = (row.getCell(7) != null) ? row.getCell(7).toString() : "";
+                            fila[8] = (row.getCell(8) != null) ? row.getCell(8).toString() : "";
+
+                            final Object[] filaFinal = fila;
+                            SwingUtilities.invokeLater(() -> modeloTabla.addRow(filaFinal));
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    JOptionPane.showMessageDialog(null,
+                        "Datos cargados exitosamente",
+                        "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null,
+                        "Error al cargar: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    public static void guardarCambiosExcel(DefaultTableModel modeloTabla, String rutaArchivo) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File backupDir = new File("data/backups");
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
+        }
+
+        try {
+            Files.copy(Paths.get(rutaArchivo), Paths.get("data/backups/Libros_" + timestamp + ".xlsx"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        File directorio = new File("data");
+        if (!directorio.exists() && !directorio.mkdirs()) {
+            JOptionPane.showMessageDialog(null,
+                "No se pudo crear el directorio 'data'",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        File archivoOriginal = new File(rutaArchivo);
+        File tempFile = new File(rutaArchivo + ".tmp");
+        File backupFile = new File(rutaArchivo + ".backup_" + timestamp);
+
+        detenerObservadorExcel();
+
+        try {
+            if (archivoOriginal.exists()) {
+                Files.copy(archivoOriginal.toPath(), backupFile.toPath());
+            }
+
+            try (Workbook workbook = new XSSFWorkbook();
+                 FileOutputStream fos = new FileOutputStream(tempFile)) {
+
+                Sheet sheet = workbook.createSheet("Libros");
+
+                // Cabeceras
+                Row headerRow = sheet.createRow(0);
+                String[] headers = {"ISBN", "Título", "Autor", "Editorial", "Género",
+                                   "Año", "Precio", "Descripción", "Portada"};
+                for (int i = 0; i < headers.length; i++) {
+                    headerRow.createCell(i).setCellValue(headers[i]);
+                }
+
+                // Datos
+                for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+                    Row row = sheet.createRow(i + 1);
+                    for (int j = 0; j < modeloTabla.getColumnCount(); j++) {
+                        Object value = modeloTabla.getValueAt(i, j);
+                        Cell cell = row.createCell(j);
+
+                        if (value != null) {
+                            try {
+                                if (value instanceof Integer) {
+                                    cell.setCellValue((Integer) value);
+                                } else if (value instanceof Double) {
+                                    cell.setCellValue((Double) value);
+                                } else if (value instanceof Number) {
+                                    cell.setCellValue(((Number) value).doubleValue());
+                                } else {
+                                    cell.setCellValue(value.toString());
+                                }
+                            } catch (Exception e) {
+                                cell.setCellValue("ERROR_EN_DATO");
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < modeloTabla.getColumnCount(); i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                workbook.write(fos);
+            }
+
+            if (archivoOriginal.exists()) {
+                Files.delete(archivoOriginal.toPath());
+            }
+            Files.move(tempFile.toPath(), archivoOriginal.toPath());
+
+            if (backupFile.exists()) {
+                Files.delete(backupFile.toPath());
+            }
+
+            JOptionPane.showMessageDialog(null,
+                "Datos guardados con éxito!\nRespaldo: " + backupFile.getName(),
+                "Éxito",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception e) {
+            try {
+                if (backupFile.exists() && (!archivoOriginal.exists() || archivoOriginal.length() == 0)) {
+                    Files.move(backupFile.toPath(), archivoOriginal.toPath(),
+                             StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
+            JOptionPane.showMessageDialog(null,
+                "Error al guardar. Se restauró la versión anterior.\nDetalle: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+            iniciarObservadorExcel(modeloTabla);
+        }
+    }
+}
