@@ -1,0 +1,27 @@
+package main;
+
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import vista.LibrosView;
+
+public class MainApp {
+    public static void main(String[] args) {
+        try {
+            // Establecer look and feel del sistema
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+            // Configuración de estilos globales
+            UIManager.put("Panel.background", new java.awt.Color(245, 245, 245));
+            UIManager.put("Button.font", new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            LibrosView vista = new LibrosView();
+            vista.setVisible(true);
+        });
+    }
+}
