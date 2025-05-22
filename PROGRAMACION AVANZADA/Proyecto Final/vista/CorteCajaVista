@@ -1,0 +1,365 @@
+package vista;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+
+import utils.ExcelManager;
+import utils.PDFProcessor;
+
+public class CorteCajaVista extends JFrame {
+    private JTextField txtMontoInicial, txtVentasEfectivo, txtVentasTarjeta, txtVentasTransferencia, txtRetiros, txtObservaciones;
+    private JLabel lblMontoFinal, lblFecha;
+    private JButton btnCalcular, btnGuardar, btnSeleccionarFecha, btnCargarRecibos;
+
+    public CorteCajaVista() {
+        setTitle("Sistema de Corte de Caja - Electronics Technology");
+        setSize(650, 550);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        initComponents();
+        configurarEventos();
+
+        btnSeleccionarFecha.addActionListener(e -> {
+			try {
+				mostrarDialogoSeleccionFecha();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+     // En el evento del botón (o donde llames al método)
+        btnCargarRecibos.addActionListener(e -> {
+            LocalDate fechaActual = LocalDate.now();
+            cargarRecibosDelDia(fechaActual); // Pasar la fecha como parámetro
+        });
+
+        btnSeleccionarFecha.addActionListener(e -> {
+            try {
+                List<LocalDate> fechas = PDFProcessor.obtenerFechasConRecibos();
+                if (fechas.isEmpty()) {
+                    JOptionPane.showMessageDialog(this,
+                        "No hay recibos registrados en el sistema",
+                        "Información",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+
+                SeleccionarFechaDialog dialog = new SeleccionarFechaDialog(this, fechas);
+                dialog.setVisible(true);
+
+                if (dialog.getFechaSeleccionada() != null) {
+                    cargarRecibosDelDia(dialog.getFechaSeleccionada());
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error al leer recibos: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    private void mostrarDialogoSeleccionFecha() throws IOException {
+        // Obtener fechas con recibos disponibles
+        List<LocalDate> fechasConRecibos = PDFProcessor.obtenerFechasConRecibos();
+
+        if (fechasConRecibos.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay recibos registrados.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Diálogo personalizado con JList o JComboBox
+        SeleccionarFechaDialog dialog = new SeleccionarFechaDialog(this, fechasConRecibos);
+        dialog.setVisible(true);
+
+        if (dialog.getFechaSeleccionada() != null) {
+            LocalDate fecha = dialog.getFechaSeleccionada();
+            lblFecha.setText("Fecha: " + fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            cargarRecibosDelDia(fecha); // Cargar datos de la fecha seleccionada
+        }
+    }
+
+    private void calcular() {
+        try {
+            double total = parseDouble(txtMontoInicial.getText()) +
+                          parseDouble(txtVentasEfectivo.getText()) +
+                          parseDouble(txtVentasTarjeta.getText()) +
+                          parseDouble(txtVentasTransferencia.getText()) -
+                          parseDouble(txtRetiros.getText());
+
+            lblMontoFinal.setText(String.format("$%,.2f", total));
+        } catch (NumberFormatException ex) {
+            lblMontoFinal.setText("Error en datos");
+        }
+    }
+
+    // Método auxiliar para parsear doubles
+    private double parseDouble(String value) {
+        if (value == null || value.trim().isEmpty()) {
+			return 0.0;
+		}
+        try {
+            return Double.parseDouble(value.replace("$", "").replace(",", ""));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    private void cargarRecibosDelDia(LocalDate fecha) {
+        try {
+            // Verificar si hay recibos primero
+            if (!PDFProcessor.existenRecibosParaFecha(fecha)) {
+                JOptionPane.showMessageDialog(this,
+                    "No se encontraron recibos para el " +
+                    fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    "Advertencia",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Procesar recibos
+            Map<String, Double> ventas = PDFProcessor.procesarRecibosDelDia(fecha);
+
+            // Actualizar UI
+            txtVentasEfectivo.setText(String.format("%.2f", ventas.getOrDefault("EFECTIVO", 0.0)));
+            txtVentasTarjeta.setText(String.format("%.2f", ventas.getOrDefault("TARJETA", 0.0)));
+            txtVentasTransferencia.setText(String.format("%.2f", ventas.getOrDefault("TRANSFERENCIA", 0.0)));
+            lblFecha.setText("Fecha: " + fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            calcular(); // Actualizar monto final
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al cargar recibos:\n" + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+
+
+
+    private void initComponents() {
+        // Panel principal
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // 1. Panel superior (Título y fecha)
+        JPanel panelSuperior = crearPanelSuperior();
+
+        // 2. Panel central (Formulario)
+        JPanel panelFormulario = new JPanel(new GridLayout(7, 2, 10, 10));
+        panelFormulario.setBorder(BorderFactory.createTitledBorder("Datos del Corte"));
+
+        // Campos del formulario
+        agregarCampo(panelFormulario, "Monto Inicial ($):", txtMontoInicial = new JTextField());
+        agregarCampo(panelFormulario, "Ventas en Efectivo ($):", txtVentasEfectivo = new JTextField());
+        agregarCampo(panelFormulario, "Ventas con Tarjeta ($):", txtVentasTarjeta = new JTextField());
+        agregarCampo(panelFormulario, "Ventas por Transferencia ($):", txtVentasTransferencia = new JTextField());
+        agregarCampo(panelFormulario, "Retiros ($):", txtRetiros = new JTextField("0.00"));
+
+        // Monto Final (solo lectura)
+        JLabel lblMontoFinalText = new JLabel("Monto Final ($):");
+        lblMontoFinalText.setFont(new Font("Arial", Font.BOLD, 12));
+        panelFormulario.add(lblMontoFinalText);
+
+        lblMontoFinal = new JLabel("0.00");
+        lblMontoFinal.setFont(new Font("Arial", Font.BOLD, 14));
+        lblMontoFinal.setForeground(new Color(0, 100, 0));
+        panelFormulario.add(lblMontoFinal);
+
+        agregarCampo(panelFormulario, "Observaciones:", txtObservaciones = new JTextField());
+
+        // 3. Panel inferior (Botones)
+        JPanel panelBotones = crearPanelBotones();
+
+        // Ensamblar la interfaz
+        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
+        panelPrincipal.add(panelFormulario, BorderLayout.CENTER);
+        panelPrincipal.add(panelBotones, BorderLayout.SOUTH);
+
+        add(panelPrincipal);
+    }
+
+    private JPanel crearPanelSuperior() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(70, 130, 180));
+
+        JLabel lblTitulo = new JLabel("CORTE DE CAJA", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitulo.setForeground(Color.WHITE);
+
+        lblFecha = new JLabel("Fecha: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        lblFecha.setForeground(Color.WHITE);
+
+        btnSeleccionarFecha = new JButton("Cambiar Fecha");
+        btnCargarRecibos = new JButton("Cargar Recibos PDF");
+
+        JPanel panelBotonesSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelBotonesSuperior.setOpaque(false);
+        panelBotonesSuperior.add(btnSeleccionarFecha);
+        panelBotonesSuperior.add(btnCargarRecibos);
+
+        panel.add(lblTitulo, BorderLayout.CENTER);
+        panel.add(lblFecha, BorderLayout.WEST);
+        panel.add(panelBotonesSuperior, BorderLayout.EAST);
+
+        return panel;
+    }
+
+    private JPanel crearPanelBotones() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+
+        btnCalcular = new JButton("Calcular Monto");
+        btnCalcular.setBackground(new Color(70, 130, 180));
+        btnCalcular.setForeground(Color.WHITE);
+
+        btnGuardar = new JButton("Guardar Corte");
+        btnGuardar.setBackground(new Color(34, 139, 34));
+        btnGuardar.setForeground(Color.WHITE);
+
+        panel.add(btnCalcular);
+        panel.add(btnGuardar);
+
+        return panel;
+    }
+
+    private void agregarCampo(JPanel panel, String label, JTextField field) {
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Arial", Font.PLAIN, 12));
+        panel.add(lbl);
+
+        field.setFont(new Font("Arial", Font.PLAIN, 12));
+        panel.add(field);
+    }
+
+    private void configurarEventos() {
+        // Cálculo automático
+        javax.swing.event.DocumentListener listener = new javax.swing.event.DocumentListener() {
+            @Override
+			public void changedUpdate(javax.swing.event.DocumentEvent e) { calcular(); }
+            @Override
+			public void insertUpdate(javax.swing.event.DocumentEvent e) { calcular(); }
+            @Override
+			public void removeUpdate(javax.swing.event.DocumentEvent e) { calcular(); }
+
+            private void calcular() {
+                try {
+                    double montoInicial = parseDouble(txtMontoInicial.getText());
+                    double ventasEfectivo = parseDouble(txtVentasEfectivo.getText());
+                    double ventasTarjeta = parseDouble(txtVentasTarjeta.getText());
+                    double ventasTransferencia = parseDouble(txtVentasTransferencia.getText());
+                    double retiros = parseDouble(txtRetiros.getText());
+
+                    double total = montoInicial + ventasEfectivo + ventasTarjeta + ventasTransferencia - retiros;
+                    lblMontoFinal.setText(String.format("$%,.2f", total));
+                } catch (NumberFormatException ex) {
+                    lblMontoFinal.setText("Error en datos");
+                }
+            }
+
+            private double parseDouble(String value) {
+                return value.isEmpty() ? 0 : Double.parseDouble(value);
+            }
+        };
+
+        txtMontoInicial.getDocument().addDocumentListener(listener);
+        txtVentasEfectivo.getDocument().addDocumentListener(listener);
+        txtVentasTarjeta.getDocument().addDocumentListener(listener);
+        txtVentasTransferencia.getDocument().addDocumentListener(listener);
+        txtRetiros.getDocument().addDocumentListener(listener);
+
+        // Botón para guardar
+        btnGuardar.addActionListener(e -> guardarCorte());
+
+        btnCargarRecibos.addActionListener(e -> {
+            // Obtener la fecha actual o seleccionada
+            String fechaTexto = lblFecha.getText().replace("Fecha: ", "");
+            LocalDate fecha = fechaTexto.isEmpty() ?
+                LocalDate.now() :
+                LocalDate.parse(fechaTexto, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            cargarRecibosDelDia(fecha);
+        });
+    }
+
+    private void guardarCorte() {
+        try {
+            // Validar campos obligatorios
+            if (txtMontoInicial.getText().trim().isEmpty()) {
+                throw new IllegalArgumentException("El monto inicial es requerido");
+            }
+
+            // Obtener valores
+            double montoInicial = Double.parseDouble(txtMontoInicial.getText());
+            double ventasEfectivo = Double.parseDouble(txtVentasEfectivo.getText());
+            double ventasTarjeta = Double.parseDouble(txtVentasTarjeta.getText());
+            double ventasTransferencia = Double.parseDouble(txtVentasTransferencia.getText());
+            double retiros = Double.parseDouble(txtRetiros.getText());
+            double montoFinal = Double.parseDouble(lblMontoFinal.getText().replace("$", "").replace(",", ""));
+            String observaciones = txtObservaciones.getText();
+
+            // Guardar en Excel
+            ExcelManager.guardarCorte(
+                LocalDate.now(),
+                montoInicial,
+                ventasEfectivo,
+                ventasTarjeta,
+                ventasTransferencia,
+                retiros,
+                montoFinal,
+                observaciones
+            );
+
+            JOptionPane.showMessageDialog(this,
+                "Corte guardado exitosamente en el archivo Excel",
+                "Éxito",
+                JOptionPane.INFORMATION_MESSAGE);
+
+            // Limpiar campos para nuevo corte
+            limpiarCampos();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al guardar: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void limpiarCampos() {
+        txtVentasEfectivo.setText("");
+        txtVentasTarjeta.setText("");
+        txtVentasTransferencia.setText("");
+        txtRetiros.setText("0.00");
+        txtObservaciones.setText("");
+        lblMontoFinal.setText("0.00");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+        	CorteCajaVista view = new CorteCajaVista();
+            view.setVisible(true);
+        });
+    }
+}
